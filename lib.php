@@ -1,49 +1,9 @@
 <?php
-// This file is part of Moodle - https://moodle.org/
-//
-// Moodle is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Moodle is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
-
-
-// El archivo lib.php en un plugin de Moodle se utiliza para definir funciones y clases adicionales que el plugin pueda necesitar.
-// Puede contener funciones de utilidad, definiciones de clases, funciones de manejo de eventos, entre otros.
-
-// En el contexto de tu plugin exportgrades, el archivo lib.php podría contener funciones relacionadas
-// con la exportación de calificaciones, como funciones para generar archivos Excel, interactuar con 
-// servicios externos como Google Drive, o cualquier otra funcionalidad que no encaje fácilmente en otros archivos del plugin.
-
-// También es común que el archivo lib.php contenga funciones para manejar eventos relacionados con el plugin,
-//  como registrar eventos de actividad o manejar eventos del sistema Moodle.
-
-
-
-
-/**
- * Library of interface functions and constants.
- *
- * @package     mod_exportgrades
- * @copyright   2024 Your Name <you@example.com>
- * @license     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+//este archivo lib.php proporciona funciones esenciales para la gestión de instancias del módulo mod_exportgrades, incluyendo la capacidad de agregar, actualizar y eliminar instancias en la base de datos de Moodle.
+//IMPORTANTE - Falta agrega funcion  exportgrades_generate_excel que se esta llamando desde el archivo export_grades_task.php para generar el excel con las notas a drive.
 
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Return if the plugin supports $feature.
- *
- * @param string $feature Constant representing the feature.
- * @return true | null True if the feature is supported, null otherwise.
- */
 function exportgrades_supports($feature) {
     switch ($feature) {
         case FEATURE_MOD_INTRO:
@@ -53,17 +13,6 @@ function exportgrades_supports($feature) {
     }
 }
 
-/**
- * Saves a new instance of the mod_exportgrades into the database.
- *
- * Given an object containing all the necessary data, (defined by the form
- * in mod_form.php) this function will create a new instance and return the id
- * number of the instance.
- *
- * @param object $moduleinstance An object from the form.
- * @param mod_exportgrades_mod_form $mform The form.
- * @return int The id of the newly inserted record.
- */
 function exportgrades_add_instance($moduleinstance, $mform = null) {
     global $DB;
 
@@ -74,16 +23,6 @@ function exportgrades_add_instance($moduleinstance, $mform = null) {
     return $id;
 }
 
-/**
- * Updates an instance of the mod_exportgrades in the database.
- *
- * Given an object containing all the necessary data (defined in mod_form.php),
- * this function will update an existing instance with new data.
- *
- * @param object $moduleinstance An object from the form in mod_form.php.
- * @param mod_exportgrades_mod_form $mform The form.
- * @return bool True if successful, false otherwise.
- */
 function exportgrades_update_instance($moduleinstance, $mform = null) {
     global $DB;
 
@@ -93,12 +32,6 @@ function exportgrades_update_instance($moduleinstance, $mform = null) {
     return $DB->update_record('exportgrades', $moduleinstance);
 }
 
-/**
- * Removes an instance of the mod_exportgrades from the database.
- *
- * @param int $id Id of the module instance.
- * @return bool True if successful, false on failure.
- */
 function exportgrades_delete_instance($id) {
     global $DB;
 
