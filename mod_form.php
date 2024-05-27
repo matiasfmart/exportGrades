@@ -14,6 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+
+// El archivo mod_form.php en un plugin de actividad de Moodle se utiliza para definir el formulario de configuración de la actividad.
+// Este formulario se muestra cuando un usuario está añadiendo o editando una instancia de la actividad en un curso.
+// En el contexto de tu plugin exportgrades, el archivo mod_form.php se utilizaría para definir los campos y elementos
+// de formulario necesarios para configurar la actividad de exportación de calificaciones.
+
+// En este archivo, puedes definir campos para configurar opciones específicas de la actividad, como el nombre de la actividad,
+// la descripción, la visibilidad, etc. También puedes agregar campos personalizados para configurar opciones
+// específicas de tu actividad, como la frecuencia de exportación o el destino de la exportación.
+
+// Además de definir los elementos de formulario, el archivo mod_form.php también puede contener lógica para validar
+// los datos del formulario antes de guardarlos, así como para procesar y guardar los datos en la base de datos una vez que el
+// formulario se envía.
+
+
+
+
 /**
  * The main mod_exportgrades configuration form.
  *

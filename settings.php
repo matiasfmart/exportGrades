@@ -14,6 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+
+// El archivo settings.php en un plugin de Moodle se utiliza para definir la configuración y la página de administración del plugin.
+// Esta página de configuración suele ser accesible desde la administración del sitio y permite a los administradores del sitio
+// configurar las opciones específicas del plugin.
+
+// En el contexto de tu plugin exportgrades, el archivo settings.php podría utilizarse para definir
+// las opciones de configuración relacionadas con la exportación de calificaciones,
+// como la configuración de la frecuencia de exportación o la configuración del destino
+// de la exportación (por ejemplo, el Google Drive al que se deben subir los archivos de Excel).
+
+// En este archivo, puedes definir elementos de formulario para que los administradores puedan configurar estas opciones,
+// y luego procesar los datos del formulario para guardar la configuración en la base de datos.
+//  También puedes utilizar este archivo para mostrar información relevante sobre el plugin o proporcionar enlaces
+//  útiles relacionados con la configuración.
+
+
+
+
+
+
+
+
+
+
+
 /**
  * Plugin administration pages are defined here.
  *
