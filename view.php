@@ -14,6 +14,19 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+
+// El archivo view.php en un plugin de Moodle generalmente se utiliza para mostrar el contenido principal
+// o la vista principal de la actividad o recurso que el plugin proporciona.
+//  En el contexto de tu plugin exportgrades, el archivo view.php podría usarse para mostrar la interfaz de usuario principal
+// donde los usuarios interactúan con la funcionalidad de exportación de calificaciones.
+
+// En view.php puedes incluir lógica para procesar datos, interactuar con la base de datos si es necesario,
+// y generar la salida HTML que se mostrará a los usuarios.
+//  También es común que este archivo maneje cualquier acción que el usuario realice en la interfaz,
+// como enviar un formulario o hacer clic en un botón, y luego redirija o actualice la página según sea necesario.
+
+
+
 /**
  * Prints an instance of mod_exportgrades.
  *

@@ -14,6 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+
+// El archivo lib.php en un plugin de Moodle se utiliza para definir funciones y clases adicionales que el plugin pueda necesitar.
+// Puede contener funciones de utilidad, definiciones de clases, funciones de manejo de eventos, entre otros.
+
+// En el contexto de tu plugin exportgrades, el archivo lib.php podría contener funciones relacionadas
+// con la exportación de calificaciones, como funciones para generar archivos Excel, interactuar con 
+// servicios externos como Google Drive, o cualquier otra funcionalidad que no encaje fácilmente en otros archivos del plugin.
+
+// También es común que el archivo lib.php contenga funciones para manejar eventos relacionados con el plugin,
+//  como registrar eventos de actividad o manejar eventos del sistema Moodle.
+
+
+
+
 /**
  * Library of interface functions and constants.
  *

@@ -1,6 +1,22 @@
 <?php
 namespace mod_exportgrades\task;
 
+
+// La clase export_grades_task en el archivo export_grades_task.php dentro de la carpeta classes/task de tu plugin
+// exportgrades se utiliza para definir una tarea programada específica. En este caso, la tarea está destinada a realizar
+// la exportación automática de calificaciones a Google Drive según la configuración de frecuencia establecida por el usuario.
+
+// Dentro de la clase export_grades_task, se define el método get_name() para proporcionar el nombre de la tarea,
+// que se utilizará para identificarla en la interfaz de administración de tareas programadas de Moodle.
+// El método execute() contiene la lógica principal de la tarea, que incluye obtener la configuración de frecuencia y
+// otros ajustes, generar el archivo Excel de las calificaciones y subirlo a Google Drive utilizando la API de Google Drive.
+
+// Esta clase y su método execute() se ejecutarán periódicamente de acuerdo con la programación de tareas cron de Moodle,
+// lo que permitirá que la exportación de calificaciones se realice de forma automática y programada.
+
+
+
+
 defined('MOODLE_INTERNAL') || die();
 
 class export_grades_task extends \core\task\scheduled_task {

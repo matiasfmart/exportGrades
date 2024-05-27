@@ -14,6 +14,21 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
+
+// El archivo index.php en un plugin de Moodle sirve como el punto de entrada principal para el plugin.
+// Dependiendo del tipo de plugin y su funcionalidad, este archivo puede tener diferentes propósitos.
+// En el contexto de un módulo de actividad, el index.php generalmente se utiliza para mostrar una lista de todas las instancias
+// del módulo en un curso específico.
+
+// En tu caso, para el plugin exportgrades, el index.php podría mostrar una lista de todas las instancias del plugin en un curso,
+// permitiendo a los usuarios ver y acceder a cada una de ellas.
+
+
+
+
+
+
+
 /**
  * Display information about all the mod_exportgrades modules in the requested course.
  *
