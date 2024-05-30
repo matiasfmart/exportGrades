@@ -1,5 +1,7 @@
 <?php
 
+//Esta clase es parte de la vista del plugin. Solo una parte ya que faltan algunos campos definidos en otra parte.
+
 require_once($CFG->libdir.'/formslib.php');
 
 class export_grades_form extends moodleform {
