@@ -66,7 +66,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Mostrar formulario
 echo '<form method="post">';
 echo '<div>';
-echo '<label for="export_frequency">' . get_string('export_frequency', 'mod_exportgrades') . '</label>';
+echo '<label for="export_frequency">' . get_string('frequency', 'mod_exportgrades') . '</label>';
 echo '<select id="export_frequency" name="export_frequency">';
 echo '<option value="daily"' . ($export_frequency === 'daily' ? ' selected' : '') . '>' . get_string('daily', 'mod_exportgrades') . '</option>';
 echo '<option value="weekly"' . ($export_frequency === 'weekly' ? ' selected' : '') . '>' . get_string('weekly', 'mod_exportgrades') . '</option>';
@@ -74,11 +74,11 @@ echo '<option value="monthly"' . ($export_frequency === 'monthly' ? ' selected' 
 echo '</select>';
 echo '</div>';
 echo '<div>';
-echo '<label for="drive_folder_id">' . get_string('drive_folder_id', 'mod_exportgrades') . '</label>';
+echo '<label for="drive_folder_id">' . get_string('drivefolderid', 'mod_exportgrades') . '</label>';
 echo '<input type="text" id="drive_folder_id" name="drive_folder_id" value="' . s($drive_folder_id) . '">';
 echo '</div>';
 echo '<div>';
-echo '<label for="drive_service_account_credentials">' . get_string('drive_service_account_credentials', 'mod_exportgrades') . '</label>';
+echo '<label for="drive_service_account_credentials">' . get_string('drivecredentials', 'mod_exportgrades') . '</label>';
 echo '<textarea id="drive_service_account_credentials" name="drive_service_account_credentials">' . s($drive_service_account_credentials) . '</textarea>';
 echo '</div>';
 echo '<div>';
