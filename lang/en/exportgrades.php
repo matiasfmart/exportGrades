@@ -16,3 +16,6 @@ $string['drivefolderid'] = 'Google Drive Folder ID';
 $string['drivefolderid_desc'] = 'The ID of the Google Drive folder where the exported Excel files will be uploaded.';
 $string['drivecredentials'] = 'Google Drive Service Account Credentials';
 $string['drivecredentials_desc'] = 'The JSON credentials for the Google Drive service account. Paste the entire JSON content here.';
+$string['exportdirectory'] = 'Local Directory';
+$string['exportdirectory_desc'] = 'Set route of local directory to save csv export.';
+$string['no_grades_found'] = 'Problemas PRUEBAS PRUEBAS Y MAS PRUEBAS';
