@@ -3,7 +3,7 @@ require_once(__DIR__.'/../../config.php');
 
 $file = optional_param('file', '', PARAM_TEXT);
 if (!empty($file)) {
-    $filepath = "/Users/matiasmartinez/Downloads/" . $file;
+    $filepath = "/Users/matiasmartinez/Documents/" . $file;
 
     if (file_exists($filepath)) {
         // Forzar la descarga del archivo CSV

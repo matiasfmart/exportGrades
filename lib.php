@@ -113,6 +113,63 @@ function exportgrades_generate_excel($courseid, $folderId, $exportFrequency, $ex
 }
 
 
+// function export_selected_grades_to_csv($courseid) {
+//     global $DB;
+
+//     // Consulta para obtener los campos itemid, userid y finalgrade de la tabla mdl_grade_grades
+//     $sql = "SELECT itemid, userid, finalgrade
+//             FROM {grade_grades}
+//             WHERE itemid IN (
+//                 SELECT id FROM {grade_items} WHERE courseid = :courseid
+//             )";
+//     $params = ['courseid' => $courseid];
+//     $grades = $DB->get_records_sql($sql, $params);
+
+//     if (empty($grades)) {
+//         return false;
+//     }
+
+//     // Nombre del archivo CSV
+//     $filename = "grades_course_{$courseid}_" . date('Ymd_His') . ".csv";
+
+//     // Obtener la ruta del directorio de exportación desde la configuración
+//     $export_directory = get_string('mod_exportgrades', 'exportdirectory');
+//     if (empty($export_directory)) {
+//         // Si la configuración no está definida, usar una ruta predeterminada
+//         $export_directory = '/Users/matiasmartinez/Downloads/';
+//     }
+
+//     // Crear el directorio de exportación si no existe
+//     if (!file_exists($export_directory)) {
+//         mkdir($export_directory, 0777, true);
+//     }
+
+//     // Combinar la ruta del directorio y el nombre de archivo para obtener la ruta completa
+//     $filepath = $export_directory . $filename;
+
+//     // Abrir el archivo CSV para escribir
+//     $file = fopen($filepath, 'w');
+
+//     // Escribir la cabecera del CSV
+//     $header = ['itemid', 'userid', 'finalgrade'];
+//     fputcsv($file, $header);
+
+//     // Escribir los datos de las calificaciones
+//     foreach ($grades as $grade) {
+//         $row = [
+//             $grade->itemid,
+//             $grade->userid,
+//             $grade->finalgrade
+//         ];
+//         fputcsv($file, $row);
+//     }
+
+//     // Cerrar el archivo CSV
+//     fclose($file);
+
+//     return $filepath;
+// }
+
 function export_selected_grades_to_csv($courseid) {
     global $DB;
 
@@ -133,10 +190,15 @@ function export_selected_grades_to_csv($courseid) {
     $filename = "grades_course_{$courseid}_" . date('Ymd_His') . ".csv";
 
     // Obtener la ruta del directorio de exportación desde la configuración
-    $export_directory = get_config('mod_exportgrades', 'export_directory');
+    $export_directory = get_config('mod_exportgrades', 'exportdirectory');
     if (empty($export_directory)) {
         // Si la configuración no está definida, usar una ruta predeterminada
-        $export_directory = __DIR__ . '/export/';
+        $export_directory = '/Users/matiasmartinez/Downloads';
+    }
+
+    // Asegurarse de que el directorio termina con una barra
+    if (substr($export_directory, -1) !== DIRECTORY_SEPARATOR) {
+        $export_directory .= DIRECTORY_SEPARATOR;
     }
 
     // Crear el directorio de exportación si no existe
