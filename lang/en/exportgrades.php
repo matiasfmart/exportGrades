@@ -4,6 +4,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 $string['modulename'] = 'Export Grades Plugin';
+$string['grade_export_task'] = 'Export Grades Task Automation';
 $string['pluginname'] = 'export-grades-cloud';
 $string['exportgrades'] = 'Export Grades';
 $string['frequency'] = 'Export Frequency';
