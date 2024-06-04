@@ -3,6 +3,7 @@
 //Esta clase define strings para que en moodle el plugin se pueda ver en distintos idiomas.fin.
 
 defined('MOODLE_INTERNAL') || die();
+$string['modulename'] = 'Export Grades Plugin';
 $string['pluginname'] = 'export-grades-cloud';
 $string['exportgrades'] = 'Export Grades';
 $string['frequency'] = 'Export Frequency';
@@ -19,3 +20,4 @@ $string['drivecredentials_desc'] = 'The JSON credentials for the Google Drive se
 $string['exportdirectory'] = 'Local Directory';
 $string['exportdirectory_desc'] = 'Set route of local directory to save csv export.';
 $string['no_grades_found'] = 'Problemas PRUEBAS PRUEBAS Y MAS PRUEBAS';
+$string['noexportgradesinstances'] = 'No hay instancias de exportación de calificaciones en este curso.';
