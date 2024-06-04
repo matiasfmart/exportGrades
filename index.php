@@ -26,7 +26,7 @@ $PAGE->set_context($coursecontext);
 
 echo $OUTPUT->header();
 
-$modulenameplural = get_string('modulenameplural', 'mod_exportgrades');
+$modulenameplural = get_string('exportgrades', 'mod_exportgrades');
 echo $OUTPUT->heading($modulenameplural);
 
 $exportgradess = get_all_instances_in_course('exportgrades', $course);
