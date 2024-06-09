@@ -38,6 +38,16 @@ if ($hassiteconfig) {
             ''
         ));
 
+        // Añadir opción de selección de idioma
+        $settings->add(new admin_setting_configselect(
+            'mod_exportgrades/language',
+            get_string('language', 'mod_exportgrades'),
+            get_string('configlanguage_desc', 'mod_exportgrades'), // Corrige aquí para que coincida con tu archivo lang
+            $current_language, 
+            $langoptions
+            
+        ));
+
         $ADMIN->add('modsettings', $settings);
     }
 }
