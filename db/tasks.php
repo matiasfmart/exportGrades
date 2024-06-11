@@ -1,11 +1,10 @@
 <?php
-defined('MOODLE_INTERNAL') || die();
 
 $tasks = array(
     array(
         'classname' => 'mod_exportgrades\task\grade_export_task',
         'blocking' => 0,
-        'minute' => '*/5',
+        'minute' => '*/1',
         'hour' => '*',
         'day' => '*',
         'month' => '*',

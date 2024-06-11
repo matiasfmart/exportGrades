@@ -2,8 +2,6 @@
 
 namespace mod_exportgrades\task;
 
-defined('MOODLE_INTERNAL') || die();
-
 // class export_grades_task extends \core\task\scheduled_task {
 
 //     public function get_name() {
