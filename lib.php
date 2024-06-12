@@ -46,16 +46,27 @@ function exportgrades_delete_instance($id) {
 function obtener_notas_curso($courseid) {
     global $DB;
 
-    $sql = "SELECT u.id as id_alumno, CONCAT(u.firstname, ' ', u.lastname) as nombre_completo, c.fullname as curso,
-            gi.itemname as item, gg.finalgrade as nota_final
+    $sql = "SELECT u.id AS id_alumno, CONCAT(u.firstname, ' ', u.lastname) AS nombre_completo, c.id AS id_curso, c.fullname AS curso,
+            gi.itemname AS item, COALESCE(gg.finalgrade, 'Sin calificar') AS nota_item,
+            AVG(gg.finalgrade) OVER (PARTITION BY u.id, c.id) AS nota_final
             FROM {user} u
-            JOIN {grade_grades} gg ON gg.userid = u.id
-            JOIN {grade_items} gi ON gi.id = gg.itemid
-            JOIN {course} c ON gi.courseid = c.id
-            WHERE gi.courseid = :courseid AND gg.finalgrade IS NOT NULL";
+            JOIN {role_assignments} ra ON ra.userid = u.id
+            JOIN {context} ctx ON ctx.id = ra.contextid AND ctx.contextlevel = 50
+            JOIN {course} c ON c.id = ctx.instanceid
+            JOIN {grade_items} gi ON gi.courseid = c.id AND gi.itemtype != 'course'
+            LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = u.id
+            WHERE c.id = :courseid AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')
+            GROUP BY u.id, c.id, gi.id, gg.finalgrade
+            ORDER BY u.id, gi.itemname";
 
-    return $DB->get_records_sql($sql, ['courseid' => $courseid]);
+    // Use get_recordset_sql() para manejar registros sin clave única.
+    return $DB->get_recordset_sql($sql, ['courseid' => $courseid]);
 }
+
+
+
+
+
 
 function get_course_categories_tree($courseid) {
     global $DB;
@@ -102,7 +113,6 @@ function export_selected_grades_to_csv($courseid) {
     $categories = get_course_categories_tree($courseid);
     $category_path = implode('_', $categories);
 
-    // Nombre del archivo CSV
     $date = new DateTime();
     $datetime = $date->format('Ymd_His');
     $filename = "{$category_path}_{$datetime}.csv";
@@ -113,25 +123,45 @@ function export_selected_grades_to_csv($courseid) {
         die('No se pudo abrir el archivo temporal para escritura.');
     }
 
-    $headers = ['ID de Alumno', 'Nombre y Apellido de Alumno', 'Curso', 'Item', 'Nota Final'];
+    $headers = ['ID de Alumno', 'Nombre y Apellido', 'ID del Curso', 'Curso', 'Tarea', 'Nota', 'Nota Final'];
     fputcsv($handle, $headers);
 
-    foreach ($grades as $alumno) {
+    $current_alumno_id = null;
+    $current_curso_id = null;
+    foreach ($grades as $grade) {
+        if ($current_alumno_id !== $grade->id_alumno || $current_curso_id !== $grade->id_curso) {
+            if ($current_alumno_id !== null) {
+                // Agregar fila de promedio del alumno anterior
+                fputcsv($handle, [$current_alumno_id, $prev_nombre, $current_curso_id, $prev_curso, 'Promedio', '', $prev_nota_final]);
+            }
+            $current_alumno_id = $grade->id_alumno;
+            $current_curso_id = $grade->id_curso;
+        }
+
         $data = [
-            $alumno->id_alumno,
-            $alumno->nombre_completo,
-            $alumno->curso,
-            $alumno->item,
-            $alumno->nota_final
+            $grade->id_alumno,
+            $grade->nombre_completo,
+            $grade->id_curso,
+            $grade->curso,
+            $grade->item,
+            $grade->nota_item,
+            ''  // La nota final se agrega al final de cada grupo de estudiantes
         ];
         fputcsv($handle, $data);
+        $prev_nombre = $grade->nombre_completo;
+        $prev_curso = $grade->curso;
+        $prev_nota_final = $grade->nota_final;
+    }
+
+    // Última fila para el último alumno
+    if ($current_alumno_id !== null) {
+        fputcsv($handle, [$current_alumno_id, $prev_nombre, $current_curso_id, $prev_curso, 'Promedio', '', $prev_nota_final]);
     }
 
     fclose($handle);
-
-    // Añadir un mensaje de depuración
     error_log("Archivo CSV generado: $temp_file con nombre: $filename");
 
     return ['temp_file' => $temp_file, 'filename' => $filename];
 }
+
 ?>
