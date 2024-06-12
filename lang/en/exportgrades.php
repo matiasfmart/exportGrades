@@ -5,7 +5,10 @@
 defined('MOODLE_INTERNAL') || die();
 $string['modulename'] = 'Export Grades Plugin';
 $string['grade_export_task'] = 'Export Grades Task Automation';
-$string['pluginname'] = 'export-grades-cloud';
+$string['pluginadministration'] = 'Export Grades Administration';
+$string['exportgrades_help'] = 'Provides help text for exporting grades.';
+$string['modulenameplural'] = 'Export Grades Instances';
+$string['pluginname'] = 'Export Grades';
 $string['exportgrades'] = 'Export Grades';
 $string['frequency'] = 'Export Frequency';
 $string['frequency_desc'] = 'Select how often you want to export grades to Google Drive.';
