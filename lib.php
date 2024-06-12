@@ -2,75 +2,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-#region functions checks
-// use Google\Client as Google_Client;
-// use Google\Service\Drive as Google_Service_Drive;
-// use Google\Service\Sheets as Google_Service_Sheets;
-
-
-// function exportgrades_generate_excel($courseid, $folderId, $exportFrequency, $exportTime) {
-    //     global $DB;
-//     require_once(__DIR__ . '/vendor/autoload.php');
-
-//     $client = new Google_Client();
-//     $client->setAuthConfig(__DIR__ . '/config/client_secret_1036423208515-5v1f1ute6kvdppdf9tb9ni5ku36tj9uo.apps.googleusercontent.com.json');
-//     $client->addScope(Google_Service_Drive::DRIVE);
-//     $client->addScope(Google_Service_Sheets::SPREADSHEETS);
-
-//     $driveService = new Google_Service_Drive($client);
-//     $sheetsService = new Google_Service_Sheets($client);
-
-//     // Obtener información del curso
-//     $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
-
-//     // Obtener las calificaciones de los usuarios en el curso
-//     $sql = "SELECT u.id AS userid, u.firstname, u.lastname, u.email, gi.finalgrade
-//             FROM {user} u
-//             JOIN {grade_grades} gg ON gg.userid = u.id
-//             JOIN {grade_items} gi ON gi.id = gg.itemid
-//             WHERE gi.courseid = :courseid";
-//     $params = array('courseid' => $courseid);
-//     $grades = $DB->get_records_sql($sql, $params);
-
-//     // Crear el archivo Excel
-//     $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-//     $sheet = $spreadsheet->getActiveSheet();
-//     $sheet->setCellValue('A1', 'ID de Usuario');
-//     $sheet->setCellValue('B1', 'Nombre');
-//     $sheet->setCellValue('C1', 'Apellido');
-//     $sheet->setCellValue('D1', 'Correo Electrónico');
-//     $sheet->setCellValue('E1', 'Calificación');
-
-//     $row = 2;
-//     foreach ($grades as $grade) {
-//         $sheet->setCellValue('A' . $row, $grade->userid);
-//         $sheet->setCellValue('B' . $row, $grade->firstname);
-//         $sheet->setCellValue('C' . $row, $grade->lastname);
-//         $sheet->setCellValue('D' . $row, $grade->email);
-//         $sheet->setCellValue('E' . $row, $grade->finalgrade);
-//         $row++;
-//     }
-
-//     // Guardar el archivo Excel en Google Drive
-//     $fileMetadata = new Google_Service_Drive_DriveFile(array(
-//         'name' => 'Calificaciones del Curso ' . $course->fullname . '.xlsx',
-//         'parents' => array($folderId),
-//         'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-//     ));
-//     $content = file_get_contents('php://memory');
-//     $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
-//     $writer->save($content);
-
-//     $file = $driveService->files->create($fileMetadata, array(
-//         'data' => $content,
-//         'mimeType' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-//         'uploadType' => 'multipart'
-//     ));
-
-//     printf("Archivo creado con ID: %s\n", $file->id);
-// }
-
-#endregion
+require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php'); // Incluye el autoload de Composer
 
 function exportgrades_supports($feature) {
     switch ($feature) {
@@ -136,7 +68,7 @@ function export_selected_grades_to_csv($courseid) {
     $export_directory = get_config('mod_exportgrades', 'exportdirectory');
     if (empty($export_directory)) {
         // Si la configuración no está definida, usar una ruta predeterminada
-        $export_directory = '/Users/matiasmartinez/Downloads';
+        $export_directory = 'C:/xampp/htdocs/MoodleWindowsInstaller-latest-401/server/moodle/mod/exportgrades/exports';//modificado mb
     }
 
     // Asegurarse de que el directorio termina con una barra
@@ -173,4 +105,68 @@ function export_selected_grades_to_csv($courseid) {
     fclose($file);
 
     return $filepath;
+}
+
+
+//subida al drive
+
+function uploadToGoogleDrive($filePath, $fileName) {
+    $client = new Google_Client();
+    $client->setAuthConfig('config/client_secret.json');
+    $client->addScope(Google_Service_Drive::DRIVE_FILE);
+    $client->setAccessType('offline');
+    $client->setPrompt('select_account consent');
+
+    // Path to the token file
+    $tokenPath = 'config/token.json';
+
+    if (file_exists($tokenPath)) {
+        $accessToken = json_decode(file_get_contents($tokenPath), true);
+        $client->setAccessToken($accessToken);
+    }
+
+    // Refresh the token if it's expired
+    if ($client->isAccessTokenExpired()) {
+        if ($client->getRefreshToken()) {
+            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+        } else {
+            // Request authorization from the user
+            $authUrl = $client->createAuthUrl();
+            printf("Open the following link in your browser:\n%s\n", $authUrl);
+            print 'Enter verification code: ';
+            $authCode = trim(fgets(STDIN));
+
+            // Exchange authorization code for an access token
+            $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);
+            $client->setAccessToken($accessToken);
+
+            // Check to see if there was an error
+            if (array_key_exists('error', $accessToken)) {
+                throw new Exception(join(', ', $accessToken));
+            }
+        }
+        // Save the token to a file
+        if (!file_exists(dirname($tokenPath))) {
+            mkdir(dirname($tokenPath), 0700, true);
+        }
+        file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+    }
+
+    $service = new Google_Service_Drive($client);
+
+    $fileMetadata = new Google_Service_Drive_DriveFile(array(
+        'name' => $fileName,
+        'parents' => array('1pqbk7AuZNdeWnJMValUAxpnMfndsH1Ao')
+    ));
+
+    $content = file_get_contents($filePath);
+
+    $file = $service->files->create($fileMetadata, array(
+        'data' => $content,
+        'mimeType' => 'text/csv',
+        'uploadType' => 'multipart',
+        'fields' => 'id'
+    ));
+
+    printf("File ID: %s\n", $file->id);
 }

@@ -49,10 +49,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     set_config('drive_folder_id', $drive_folder_id, 'mod_exportgrades');
     set_config('drive_service_account_credentials', $drive_service_account_credentials, 'mod_exportgrades');
 
-    // Generar y redirigir al script de descarga
+    // Generar el archivo CSV
     $filepath = export_selected_grades_to_csv($course->id);
 
     if ($filepath) {
+        // Subir el archivo CSV a Google Drive
+        uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id);
+
         // Redirigir al usuario al script de descarga con el nombre del archivo
         redirect('download_csv.php?file=' . urlencode(basename($filepath)));
         exit();
