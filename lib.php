@@ -64,10 +64,6 @@ function obtener_notas_curso($courseid) {
 }
 
 
-
-
-
-
 function get_course_categories_tree($courseid) {
     global $DB;
     $categories = [];
