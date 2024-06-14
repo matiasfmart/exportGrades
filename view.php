@@ -54,8 +54,11 @@ $file_info = export_selected_grades_to_csv($course->id);
 $filepath = $file_info['temp_file'];
 $filename = $file_info['filename'];
 
-redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($filepath), 'filename' => $filename)));
 
+// Subir el archivo CSV a Google Drive
+uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id);
+
+redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($filepath), 'filename' => $filename)));
 
     if ($result) {
         $temp_file = $result['temp_file'];

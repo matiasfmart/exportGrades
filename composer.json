@@ -1,0 +1,23 @@
+{
+    "name": "marce/exportgrades",
+    "description": "Exportacion de csv a google drive.",
+    "type": "composer-plugin",
+    "require": {
+        "composer-plugin-api": "^2.6",
+        "google/apiclient": "2.9",
+        "php": "*"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Marce\\Exportgrades\\": "classes/"
+        }
+    },
+    "authors": [
+        {
+            "name": "MarBoanerges27",
+            "email": "marcelanoemibanega@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}

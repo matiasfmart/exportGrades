@@ -1,6 +1,6 @@
 <?php
 
-defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php');
 
 function exportgrades_supports($feature) {
     switch ($feature) {
@@ -159,5 +159,70 @@ function export_selected_grades_to_csv($courseid) {
 
     return ['temp_file' => $temp_file, 'filename' => $filename];
 }
+
+
+//subida al drive
+
+function uploadToGoogleDrive($filePath, $fileName) {
+    $client = new Google_Client();
+    $client->setAuthConfig('config/client_secret.json');
+    $client->addScope(Google_Service_Drive::DRIVE_FILE);
+    $client->setAccessType('offline');
+    $client->setPrompt('select_account consent');
+
+    // Path to the token file
+    $tokenPath = 'config/token.json';
+
+    if (file_exists($tokenPath)) {
+        $accessToken = json_decode(file_get_contents($tokenPath), true);
+        $client->setAccessToken($accessToken);
+    }
+
+    // Refresh the token if it's expired
+    if ($client->isAccessTokenExpired()) {
+        if ($client->getRefreshToken()) {
+            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+        } else {
+            // Request authorization from the user
+            $authUrl = $client->createAuthUrl();
+            printf("Open the following link in your browser:\n%s\n", $authUrl);
+            print 'Enter verification code: ';
+            $authCode = trim(fgets(STDIN));
+
+            // Exchange authorization code for an access token
+            $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);
+            $client->setAccessToken($accessToken);
+
+            // Check to see if there was an error
+            if (array_key_exists('error', $accessToken)) {
+                throw new Exception(join(', ', $accessToken));
+            }
+        }
+        // Save the token to a file
+        if (!file_exists(dirname($tokenPath))) {
+            mkdir(dirname($tokenPath), 0700, true);
+        }
+        file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+    }
+
+    $service = new Google_Service_Drive($client);
+
+    $fileMetadata = new Google_Service_Drive_DriveFile(array(
+        'name' => $fileName,
+        'parents' => array('1pqbk7AuZNdeWnJMValUAxpnMfndsH1Ao')
+    ));
+
+    $content = file_get_contents($filePath);
+
+    $file = $service->files->create($fileMetadata, array(
+        'data' => $content,
+        'mimeType' => 'text/csv',
+        'uploadType' => 'multipart',
+        'fields' => 'id'
+    ));
+
+    printf("File ID: %s\n", $file->id);
+}
+
 
 ?>
