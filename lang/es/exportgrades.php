@@ -5,6 +5,9 @@
 defined('MOODLE_INTERNAL') || die();
 $string['language'] = 'Lenguaje';
 $string['configlanguage_desc'] = 'Selecciona el idioma predeterminado para mostrar el plugin.';
+$string['pluginadministration'] = 'Administración de Exportación de Notas';
+$string['exportgrades_help'] = 'Proporciona texto de ayuda para exportar calificaciones.';
+$string['modulenameplural'] = 'Exportar instancias de calificaciones';
 $string['modulename'] = 'Plugin de Exportación de Calificaciones';
 $string['grade_export_task'] = 'Automatización de Tarea de Exportación de Calificaciones';
 $string['pluginname'] = 'export-grades-cloud';

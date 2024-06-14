@@ -2,13 +2,13 @@
 require_once '../vendor/autoload.php';
 
 $client = new Google_Client();
-$client->setAuthConfig('C:/xampp/htdocs/MoodleWindowsInstaller-latest-401/server/moodle/mod/exportgrades/config/client_secret.json');
+$client->setAuthConfig('config/client_secret.json');
 $client->addScope(Google_Service_Drive::DRIVE_FILE);
 $client->setAccessType('offline');
 $client->setPrompt('consent');
 
 // Path to the token file
-$tokenPath = 'C:/xampp/htdocs/MoodleWindowsInstaller-latest-401/server/moodle/mod/exportgrades/config/token.json';
+$tokenPath = 'config/token.json';
 
 if (file_exists($tokenPath)) {
     $accessToken = json_decode(file_get_contents($tokenPath), true);

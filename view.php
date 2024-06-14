@@ -49,20 +49,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     set_config('drive_folder_id', $drive_folder_id, 'mod_exportgrades');
     set_config('drive_service_account_credentials', $drive_service_account_credentials, 'mod_exportgrades');
 
-    // Generar el archivo CSV
-    $filepath = export_selected_grades_to_csv($course->id);
+// Generar y redirigir al script de descarga
+$file_info = export_selected_grades_to_csv($course->id);
+$filepath = $file_info['temp_file'];
+$filename = $file_info['filename'];
 
-    if ($filepath) {
-        // Subir el archivo CSV a Google Drive
-        uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id);
 
+// Subir el archivo CSV a Google Drive
+uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id);
+
+redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($filepath), 'filename' => $filename)));
+
+    if ($result) {
+        $temp_file = $result['temp_file'];
+        $filename = $result['filename'];
         // Redirigir al usuario al script de descarga con el nombre del archivo
-        redirect('download_csv.php?file=' . urlencode(basename($filepath)));
+        redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => $temp_file, 'filename' => $filename)));
         exit();
     } else {
         echo $OUTPUT->notification(get_string('no_grades_found', 'mod_exportgrades'), 'notifyproblem');
     }
-
     echo $OUTPUT->notification(get_string('changessaved'), 'notifysuccess');
 }
 
