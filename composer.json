@@ -4,7 +4,8 @@
     "type": "composer-plugin",
     "require": {
         "composer-plugin-api": "^2.6",
-        "php": "^7.4"
+        "google/apiclient": "2.9",
+        "php": "*"
     },
     "license": "MIT",
     "autoload": {

@@ -1,8 +1,6 @@
 <?php
 
-defined('MOODLE_INTERNAL') || die();
-
-require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php'); // Incluye el autoload de Composer
+require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php');
 
 function exportgrades_supports($feature) {
     switch ($feature) {
@@ -45,66 +43,121 @@ function exportgrades_delete_instance($id) {
     return true;
 }
 
+function obtener_notas_curso($courseid) {
+    global $DB;
+
+    $sql = "SELECT u.id AS id_alumno, CONCAT(u.firstname, ' ', u.lastname) AS nombre_completo, c.id AS id_curso, c.fullname AS curso,
+            gi.itemname AS item, COALESCE(gg.finalgrade, 'Sin calificar') AS nota_item,
+            AVG(gg.finalgrade) OVER (PARTITION BY u.id, c.id) AS nota_final
+            FROM {user} u
+            JOIN {role_assignments} ra ON ra.userid = u.id
+            JOIN {context} ctx ON ctx.id = ra.contextid AND ctx.contextlevel = 50
+            JOIN {course} c ON c.id = ctx.instanceid
+            JOIN {grade_items} gi ON gi.courseid = c.id AND gi.itemtype != 'course'
+            LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = u.id
+            WHERE c.id = :courseid AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')
+            GROUP BY u.id, c.id, gi.id, gg.finalgrade
+            ORDER BY u.id, gi.itemname";
+
+    // Use get_recordset_sql() para manejar registros sin clave única.
+    return $DB->get_recordset_sql($sql, ['courseid' => $courseid]);
+}
+
+
+function get_course_categories_tree($courseid) {
+    global $DB;
+    $categories = [];
+
+    if ($courseid <= 0) {
+        throw new moodle_exception('Invalid course ID');
+    }
+
+    $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
+    if (!$course) {
+        throw new moodle_exception('No se puede encontrar el curso en la base de datos');
+    }
+
+    // Obtener la categoría del curso
+    $category = $DB->get_record('course_categories', ['id' => $course->category], '*', MUST_EXIST);
+    if (!$category) {
+        throw new moodle_exception('No se puede encontrar la categoría del curso en la base de datos. ID de categoría: ' . $course->category);
+    }
+
+    // Recorrer las categorías hasta la raíz
+    while ($category) {
+        $categories[] = format_string($category->name);
+        if ($category->parent == 0) break;
+        $category = $DB->get_record('course_categories', ['id' => $category->parent], '*', MUST_EXIST);
+    }
+
+    if (empty($categories)) {
+        throw new moodle_exception('No se puede encontrar registro de datos en la tabla course_categories de la base de datos.');
+    }
+
+    return array_reverse($categories); // Esto asegura que la raíz esté primero
+}
+
 function export_selected_grades_to_csv($courseid) {
     global $DB;
 
-    // Consulta para obtener los campos itemid, userid y finalgrade de la tabla mdl_grade_grades
-    $sql = "SELECT itemid, userid, finalgrade
-            FROM {grade_grades}
-            WHERE itemid IN (
-                SELECT id FROM {grade_items} WHERE courseid = :courseid
-            )";
-    $params = ['courseid' => $courseid];
-    $grades = $DB->get_records_sql($sql, $params);
+    $grades = obtener_notas_curso($courseid);
 
     if (empty($grades)) {
         return false;
     }
 
-    // Nombre del archivo CSV
-    $filename = "grades_course_{$courseid}_" . date('Ymd_His') . ".csv";
+    $categories = get_course_categories_tree($courseid);
+    $category_path = implode('_', $categories);
 
-    // Obtener la ruta del directorio de exportación desde la configuración
-    $export_directory = get_config('mod_exportgrades', 'exportdirectory');
-    if (empty($export_directory)) {
-        // Si la configuración no está definida, usar una ruta predeterminada
-        $export_directory = 'C:/xampp/htdocs/MoodleWindowsInstaller-latest-401/server/moodle/mod/exportgrades/exports';//modificado mb
+    $date = new DateTime();
+    $datetime = $date->format('Ymd_His');
+    $filename = "{$category_path}_{$datetime}.csv";
+
+    $temp_file = tempnam(sys_get_temp_dir(), 'export_grades_');
+    $handle = fopen($temp_file, 'w');
+    if (!$handle) {
+        die('No se pudo abrir el archivo temporal para escritura.');
     }
 
-    // Asegurarse de que el directorio termina con una barra
-    if (substr($export_directory, -1) !== DIRECTORY_SEPARATOR) {
-        $export_directory .= DIRECTORY_SEPARATOR;
-    }
+    $headers = ['ID de Alumno', 'Nombre y Apellido', 'ID del Curso', 'Curso', 'Tarea', 'Nota', 'Nota Final'];
+    fputcsv($handle, $headers);
 
-    // Crear el directorio de exportación si no existe
-    if (!file_exists($export_directory)) {
-        mkdir($export_directory, 0777, true);
-    }
-
-    // Combinar la ruta del directorio y el nombre de archivo para obtener la ruta completa
-    $filepath = $export_directory . $filename;
-
-    // Abrir el archivo CSV para escribir
-    $file = fopen($filepath, 'w');
-
-    // Escribir la cabecera del CSV
-    $header = ['itemid', 'userid', 'finalgrade'];
-    fputcsv($file, $header);
-
-    // Escribir los datos de las calificaciones
+    $current_alumno_id = null;
+    $current_curso_id = null;
     foreach ($grades as $grade) {
-        $row = [
-            $grade->itemid,
-            $grade->userid,
-            $grade->finalgrade
+        if ($current_alumno_id !== $grade->id_alumno || $current_curso_id !== $grade->id_curso) {
+            if ($current_alumno_id !== null) {
+                // Agregar fila de promedio del alumno anterior
+                fputcsv($handle, [$current_alumno_id, $prev_nombre, $current_curso_id, $prev_curso, 'Promedio', '', $prev_nota_final]);
+            }
+            $current_alumno_id = $grade->id_alumno;
+            $current_curso_id = $grade->id_curso;
+        }
+
+        $data = [
+            $grade->id_alumno,
+            $grade->nombre_completo,
+            $grade->id_curso,
+            $grade->curso,
+            $grade->item,
+            $grade->nota_item,
+            ''  // La nota final se agrega al final de cada grupo de estudiantes
         ];
-        fputcsv($file, $row);
+        fputcsv($handle, $data);
+        $prev_nombre = $grade->nombre_completo;
+        $prev_curso = $grade->curso;
+        $prev_nota_final = $grade->nota_final;
     }
 
-    // Cerrar el archivo CSV
-    fclose($file);
+    // Última fila para el último alumno
+    if ($current_alumno_id !== null) {
+        fputcsv($handle, [$current_alumno_id, $prev_nombre, $current_curso_id, $prev_curso, 'Promedio', '', $prev_nota_final]);
+    }
 
-    return $filepath;
+    fclose($handle);
+    error_log("Archivo CSV generado: $temp_file con nombre: $filename");
+
+    return ['temp_file' => $temp_file, 'filename' => $filename];
 }
 
 
@@ -170,3 +223,6 @@ function uploadToGoogleDrive($filePath, $fileName) {
 
     printf("File ID: %s\n", $file->id);
 }
+
+
+?>
