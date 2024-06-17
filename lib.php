@@ -1,5 +1,6 @@
 <?php
 
+defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php');
 
 function exportgrades_supports($feature) {
@@ -162,7 +163,6 @@ function export_selected_grades_to_csv($courseid) {
 
 
 //subida al drive
-
 function uploadToGoogleDrive($filePath, $fileName) {
     $client = new Google_Client();
     $client->setAuthConfig('config/client_secret.json');
@@ -181,7 +181,14 @@ function uploadToGoogleDrive($filePath, $fileName) {
     // Refresh the token if it's expired
     if ($client->isAccessTokenExpired()) {
         if ($client->getRefreshToken()) {
-            $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+            $newAccessToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+            $client->setAccessToken($newAccessToken);
+
+            // Save the new token to a file
+            if (!file_exists(dirname($tokenPath))) {
+                mkdir(dirname($tokenPath), 0700, true);
+            }
+            file_put_contents($tokenPath, json_encode($client->getAccessToken()));
         } else {
             // Request authorization from the user
             $authUrl = $client->createAuthUrl();
@@ -197,19 +204,57 @@ function uploadToGoogleDrive($filePath, $fileName) {
             if (array_key_exists('error', $accessToken)) {
                 throw new Exception(join(', ', $accessToken));
             }
+
+            // Save the token to a file
+            if (!file_exists(dirname($tokenPath))) {
+                mkdir(dirname($tokenPath), 0700, true);
+            }
+            file_put_contents($tokenPath, json_encode($client->getAccessToken()));
         }
-        // Save the token to a file
-        if (!file_exists(dirname($tokenPath))) {
-            mkdir(dirname($tokenPath), 0700, true);
-        }
-        file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+    }
+
+    // Validate the token format
+    $tokenData = json_decode(file_get_contents($tokenPath), true);
+    if (json_last_error() !== JSON_ERROR_NONE || !isset($tokenData['access_token'])) {
+        throw new Exception('Invalid token format');
     }
 
     $service = new Google_Service_Drive($client);
 
+    // Buscar si la carpeta ya existe
+    $folderName = 'NuevaCarpeta';
+    $parentFolderId = '1pqbk7AuZNdeWnJMValUAxpnMfndsH1Ao'; // Reemplaza con el ID de la carpeta raíz
+    $response = $service->files->listFiles(array(
+        'q' => "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and '$parentFolderId' in parents and trashed = false",
+        'spaces' => 'drive',
+        'fields' => 'files(id, name)',
+    ));
+
+    $folderId = null;
+    if (count($response->files) > 0) {
+        // La carpeta ya existe
+        $folderId = $response->files[0]->id;
+        printf("La carpeta ya existe con ID: %s\n", $folderId);
+    } else {
+        // Crear la carpeta
+        $folderMetadata = new Google_Service_Drive_DriveFile(array(
+            'name' => $folderName,
+            'mimeType' => 'application/vnd.google-apps.folder',
+            'parents' => array($parentFolderId)
+        ));
+
+        $folder = $service->files->create($folderMetadata, array(
+            'fields' => 'id'
+        ));
+
+        $folderId = $folder->id;
+        printf("Nueva carpeta creada con ID: %s\n", $folderId);
+    }
+
+    // Subir el archivo a la carpeta (existente o recién creada)
     $fileMetadata = new Google_Service_Drive_DriveFile(array(
         'name' => $fileName,
-        'parents' => array('1pqbk7AuZNdeWnJMValUAxpnMfndsH1Ao')
+        'parents' => array($folderId)
     ));
 
     $content = file_get_contents($filePath);
