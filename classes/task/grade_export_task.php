@@ -1,8 +1,10 @@
 <?php
 
-namespace mod_exportgrades\classes\task;
+namespace mod_exportgrades\task;
 
-class grade_export_task extends \core\task\scheduled_task {
+use core\task\scheduled_task;
+
+class grade_export_task extends scheduled_task {
 
     public function get_name() {
         return get_string('grade_export_task', 'mod_exportgrades');
@@ -56,5 +58,3 @@ class grade_export_task extends \core\task\scheduled_task {
         return ($current_time - $last_export_time) >= $export_frequency;
     }
 }
-
-?>
