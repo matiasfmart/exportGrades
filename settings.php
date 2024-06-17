@@ -48,6 +48,42 @@ if ($hassiteconfig) {
             
         ));
 
+         // Añadir opciones de grupo
+         $settings->add(new admin_setting_configselect(
+            'mod_exportgrades/group',
+            get_string('group', 'mod_exportgrades'),
+            get_string('group_desc', 'mod_exportgrades'),
+            '',
+            array(
+                'todas' => get_string('all', 'mod_exportgrades'),
+                'notas_finales' => get_string('finalgrades', 'mod_exportgrades'),
+                'notas_belgrano' => get_string('belgranogrades', 'mod_exportgrades'),
+                'notas_yatay' => get_string('yataygrades', 'mod_exportgrades')
+            )
+        ));
+
+        // Añadir campo personalizado de autocompletado para usuarios
+        $settings->add(new admin_setting_configtext(
+            'mod_exportgrades/user_field',
+            get_string('users', 'mod_exportgrades'),
+            get_string('users_desc', 'mod_exportgrades'),
+            '', // Optional default value
+            array('disabled' => true) // Disable the text field
+          ));
+
         $ADMIN->add('modsettings', $settings);
     }
+}
+
+function get_user_field_html() {
+    global $PAGE;
+
+    // Incluir JavaScript solo en la página de configuraciones relevantes
+    $PAGE->requires->js_call_amd('mod_exportgrades/user_selector', 'init');
+
+    // HTML para el campo de búsqueda de usuarios
+    $html = '<input type="text" id="user_selector" />';
+    $html .= '<div id="user_selector_results"></div>';
+
+    return $html;
 }

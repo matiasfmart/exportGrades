@@ -72,27 +72,137 @@ redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => ur
     echo $OUTPUT->notification(get_string('changessaved'), 'notifysuccess');
 }
 
-// Mostrar formulario
-echo '<form method="post">';
-echo '<div>';
+// Incluye CSS personalizado para mejorar el formulario
+echo '<style>
+    form.custom-form {
+        background-color: #f7f7f7;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .custom-form div {
+        margin-bottom: 10px;
+    }
+    .custom-form label {
+        font-weight: bold;
+    }
+    .custom-form input[type="text"], .custom-form select, .custom-form textarea {
+        width: 100%;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+    }
+    .custom-form input[type="submit"] {
+        background-color: #0056b3;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    .custom-form input[type="submit"]:hover {
+        background-color: #004494;
+    }
+    .form-group {
+        margin-bottom: 15px; /* Espaciado entre grupos de formularios */
+    }
+    label, .form-control {
+        display: inline-block; /* Hacer que los elementos sean en línea para gestionar mejor su anchura */
+        vertical-align: top;
+    }
+    label {
+        width: 20%; /* Anchura del label */
+        max-width: 180px; /* Anchura máxima para evitar que sea demasiado grande */
+        min-width: 100px; /* Anchura mínima para mantener la consistencia */
+        margin-right: 10px; /* Espacio entre el label y el control de entrada */
+    }
+    .form-control {
+        width: calc(80% - 10px); /* Ocupar el resto del espacio disponible */
+        max-width: 300px; /* Anchura máxima del input */
+    }
+    .hidden {
+        display: none;
+    }
+</style>';
+
+//Include jQuery
+echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>';
+
+
+// Formulario
+echo '<form method="post" class="custom-form">';
+echo '<div class="form-group">';
 echo '<label for="export_frequency">' . get_string('frequency', 'mod_exportgrades') . '</label>';
-echo '<select id="export_frequency" name="export_frequency">';
+echo '<select id="export_frequency" name="export_frequency" class="form-control">';
 echo '<option value="daily"' . ($export_frequency === 'daily' ? ' selected' : '') . '>' . get_string('daily', 'mod_exportgrades') . '</option>';
 echo '<option value="weekly"' . ($export_frequency === 'weekly' ? ' selected' : '') . '>' . get_string('weekly', 'mod_exportgrades') . '</option>';
 echo '<option value="monthly"' . ($export_frequency === 'monthly' ? ' selected' : '') . '>' . get_string('monthly', 'mod_exportgrades') . '</option>';
 echo '</select>';
 echo '</div>';
-echo '<div>';
+
+//Opciones adicionales para 'Diariamente'
+ echo '<div id="daily_options" class="form-group hidden">';
+ echo '<label for="day_of_week">Día de la semana</label>';
+ echo ' <select id="day_of_week" name="day_of_week" class="form-control">';
+ echo '     <option value="monday">Lunes</option>';
+ echo '     <option value="tuesday">Martes</option>';
+ echo '     <option value="wednesday">Miércoles</option>';
+ echo '     <option value="thursday">Jueves</option>';
+ echo '     <option value="friday">Viernes</option>';
+ echo ' </select>';
+ echo ' <label for="time">Hora</label>';
+ echo ' <input type="time" id="time" name="time" class="form-control">';
+ echo '</div>';
+
+//Opciones adicionales para 'Semanalmente' 
+ echo '<div id="weekly_options" class="form-group hidden">';
+ echo ' <label for="week_day">Día de la semana</label>';
+ echo '  <select id="week_day" name="week_day" class="form-inline">';
+ echo '     <option value="saturday">Sábado</option>';
+ echo '     <option value="sunday">Domingo</option>';
+ echo ' </select>';
+ echo ' <label for="weekly_time">Hora</label>';
+ echo ' <input type="time" id="weekly_time" name="weekly_time" class="form-control">';
+ echo '</div>';
+
+//Opciones adicionales para 'Mensualmente'
+ echo '<div id="monthly_options" class="form-group hidden">';
+ echo '<label for="day_of_month">Día del mes</label>';
+ echo '<input type="number" id="day_of_month" name="day_of_month" class="form-control" min="1" max="31">';
+ echo '<label for="monthly_time">Hora</label>';
+ echo '<input type="time" id="monthly_time" name="monthly_time" class="form-control">';
+ echo '</div>';
+
+echo '<div class="form-group">';
 echo '<label for="drive_folder_id">' . get_string('drivefolderid', 'mod_exportgrades') . '</label>';
-echo '<input type="text" id="drive_folder_id" name="drive_folder_id" value="' . s($drive_folder_id) . '">';
+echo '<input type="text" id="drive_folder_id" name="drive_folder_id" class="form-control" value="' . s($drive_folder_id) . '">';
 echo '</div>';
-echo '<div>';
+echo '<div class="form-group">';
 echo '<label for="drive_service_account_credentials">' . get_string('drivecredentials', 'mod_exportgrades') . '</label>';
-echo '<textarea id="drive_service_account_credentials" name="drive_service_account_credentials">' . s($drive_service_account_credentials) . '</textarea>';
+echo '<textarea id="drive_service_account_credentials" name="drive_service_account_credentials" class="form-control">' . s($drive_service_account_credentials) . '</textarea>';
 echo '</div>';
-echo '<div>';
+echo '<div class="form-group">';
 echo '<input type="submit" value="' . get_string('savechanges') . '">';
 echo '</div>';
 echo '</form>';
+
+echo "<script>
+    function updateVisibility() {
+        var selectedFrequency = $('#export_frequency').val();
+        $('#daily_options, #weekly_options, #monthly_options').addClass('hidden');
+        if (selectedFrequency === 'daily') {
+            $('#daily_options').removeClass('hidden');
+        } else if (selectedFrequency === 'weekly') {
+            $('#weekly_options').removeClass('hidden');
+        } else if (selectedFrequency === 'monthly') {
+            $('#monthly_options').removeClass('hidden');
+        }
+    }
+
+    $(document).ready(function() {
+        $('#export_frequency').change(updateVisibility);
+        updateVisibility();  // Call on document ready to ensure correct initial state
+    });
+</script>";
 
 echo $OUTPUT->footer();
