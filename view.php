@@ -131,47 +131,8 @@ echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min
 
 // Formulario
 echo '<form method="post" class="custom-form">';
-echo '<div class="form-group">';
-echo '<label for="export_frequency">' . get_string('frequency', 'mod_exportgrades') . '</label>';
-echo '<select id="export_frequency" name="export_frequency" class="form-control">';
-echo '<option value="daily"' . ($export_frequency === 'daily' ? ' selected' : '') . '>' . get_string('daily', 'mod_exportgrades') . '</option>';
-echo '<option value="weekly"' . ($export_frequency === 'weekly' ? ' selected' : '') . '>' . get_string('weekly', 'mod_exportgrades') . '</option>';
-echo '<option value="monthly"' . ($export_frequency === 'monthly' ? ' selected' : '') . '>' . get_string('monthly', 'mod_exportgrades') . '</option>';
-echo '</select>';
-echo '</div>';
 
-//Opciones adicionales para 'Diariamente'
- echo '<div id="daily_options" class="form-group hidden">';
- echo '<label for="day_of_week">Día de la semana</label>';
- echo ' <select id="day_of_week" name="day_of_week" class="form-control">';
- echo '     <option value="monday">Lunes</option>';
- echo '     <option value="tuesday">Martes</option>';
- echo '     <option value="wednesday">Miércoles</option>';
- echo '     <option value="thursday">Jueves</option>';
- echo '     <option value="friday">Viernes</option>';
- echo ' </select>';
- echo ' <label for="time">Hora</label>';
- echo ' <input type="time" id="time" name="time" class="form-control">';
- echo '</div>';
 
-//Opciones adicionales para 'Semanalmente' 
- echo '<div id="weekly_options" class="form-group hidden">';
- echo ' <label for="week_day">Día de la semana</label>';
- echo '  <select id="week_day" name="week_day" class="form-inline">';
- echo '     <option value="saturday">Sábado</option>';
- echo '     <option value="sunday">Domingo</option>';
- echo ' </select>';
- echo ' <label for="weekly_time">Hora</label>';
- echo ' <input type="time" id="weekly_time" name="weekly_time" class="form-control">';
- echo '</div>';
-
-//Opciones adicionales para 'Mensualmente'
- echo '<div id="monthly_options" class="form-group hidden">';
- echo '<label for="day_of_month">Día del mes</label>';
- echo '<input type="number" id="day_of_month" name="day_of_month" class="form-control" min="1" max="31">';
- echo '<label for="monthly_time">Hora</label>';
- echo '<input type="time" id="monthly_time" name="monthly_time" class="form-control">';
- echo '</div>';
 
 echo '<div class="form-group">';
 echo '<label for="drive_folder_id">' . get_string('drivefolderid', 'mod_exportgrades') . '</label>';

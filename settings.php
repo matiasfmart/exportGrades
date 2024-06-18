@@ -63,27 +63,27 @@ if ($hassiteconfig) {
         ));
 
         // Añadir campo personalizado de autocompletado para usuarios
-        $settings->add(new admin_setting_configtext(
-            'mod_exportgrades/user_field',
-            get_string('users', 'mod_exportgrades'),
-            get_string('users_desc', 'mod_exportgrades'),
-            '', // Optional default value
-            array('disabled' => true) // Disable the text field
-          ));
+        // $settings->add(new admin_setting_configtext(
+        //     'mod_exportgrades/user_field',
+        //     get_string('users', 'mod_exportgrades'),
+        //     get_string('users_desc', 'mod_exportgrades'),
+        //     '', // Optional default value
+        //     array('disabled' => true) // Disable the text field
+        //   ));
 
         $ADMIN->add('modsettings', $settings);
     }
 }
 
-function get_user_field_html() {
-    global $PAGE;
+// function get_user_field_html() {
+//     global $PAGE;
 
-    // Incluir JavaScript solo en la página de configuraciones relevantes
-    $PAGE->requires->js_call_amd('mod_exportgrades/user_selector', 'init');
+//     // Incluir JavaScript solo en la página de configuraciones relevantes
+//     $PAGE->requires->js_call_amd('mod_exportgrades/user_selector', 'init');
 
-    // HTML para el campo de búsqueda de usuarios
-    $html = '<input type="text" id="user_selector" />';
-    $html .= '<div id="user_selector_results"></div>';
+//     // HTML para el campo de búsqueda de usuarios
+//     $html = '<input type="text" id="user_selector" />';
+//     $html .= '<div id="user_selector_results"></div>';
 
-    return $html;
-}
+//     return $html;
+// }
