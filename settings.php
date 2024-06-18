@@ -1,10 +1,16 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 
+
 if ($hassiteconfig) {
     $settings = new admin_settingpage('mod_exportgrades_settings', get_string('pluginname', 'mod_exportgrades'));
 
     if ($ADMIN->fulltree) {
+
+        $PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
+
+        $PAGE->requires->css('/mod/exportgrades/styles/styles.css');
+
         $settings->add(new admin_setting_configselect(
             'mod_exportgrades/export_frequency',
             get_string('frequency', 'mod_exportgrades'),
@@ -17,39 +23,63 @@ if ($hassiteconfig) {
             )
         ));
 
-        $settings->add(new admin_setting_configtext(
-            'mod_exportgrades/drive_folder_id',
-            get_string('drivefolderid', 'exportgrades'),
-            get_string('drivefolderid_desc', 'exportgrades'),
-            ''
-        ));
+               //Configuración Diaria
+                $settings->add(new admin_setting_heading('mod_exportgrades_daily_heading', get_string('dailysettings', 'mod_exportgrades'), ''));
+                $settings->add(new admin_setting_configtime('mod_exportgrades/daily_hour', 'mod_exportgrades/daily_minute',
+                    get_string('time', 'mod_exportgrades'), 
+                    get_string('selecttime', 'mod_exportgrades'), 
+                    array('h' => 8, 'm' => 0), PARAM_INT, 'daily-options hidden')); // Oculto por defecto
+                //Configuración Semanal
+                $settings->add(new admin_setting_heading('mod_exportgrades_weekly_heading', get_string('weeklysettings', 'mod_exportgrades'), ''));
+                $settings->add(new admin_setting_configselect('mod_exportgrades/weekly_day',
+                    get_string('dayofweek', 'mod_exportgrades'), 
+                    get_string('selectday', 'mod_exportgrades'), 
+                    '', [
+                        'lunes' => get_string('monday', 'mod_exportgrades'),
+                        'martes' => get_string('tuesday', 'mod_exportgrades'),
+                        'miércoles' => get_string('wednesday', 'mod_exportgrades'),
+                        'jueves' => get_string('thursday', 'mod_exportgrades'),
+                        'viernes' => get_string('friday', 'mod_exportgrades'),
+                        'sábado' => get_string('saturday', 'mod_exportgrades'),
+                        'domingo' => get_string('sunday', 'mod_exportgrades')
+                    ], PARAM_NOTAGS, 'weekly-options hidden')); // Oculto por defecto
+                //Configuración Mensual
+                $settings->add(new admin_setting_configtime('mod_exportgrades/weekly_hour', 'mod_exportgrades/weekly_minute',
+                    get_string('time', 'mod_exportgrades'), 
+                    get_string('selecttime', 'mod_exportgrades'), 
+                    array('h' => 8, 'm' => 0), PARAM_INT, 'weekly-options hidden')); // Oculto por defecto
 
-        $settings->add(new admin_setting_configtext(
-            'mod_exportgrades/drive_service_account_credentials',
-            get_string('drivecredentials', 'exportgrades'),
-            get_string('drivecredentials_desc', 'exportgrades'),
-            ''
-        ));
+                $settings->add(new admin_setting_heading('mod_exportgrades_monthly_heading', get_string('monthlysettings', 'mod_exportgrades'), ''));
+                $settings->add(new admin_setting_configtext('mod_exportgrades/monthly_day',
+                    get_string('dayofmonth', 'mod_exportgrades'),
+                    get_string('selectday', 'mod_exportgrades'), 
+                    1, PARAM_INT, 'monthly-options hidden')); // Oculto por defecto
 
-        $settings->add(new admin_setting_configtext(
-            'mod_exportgrades/exportdirectory',
-            get_string('exportdirectory', 'mod_exportgrades'),
-            get_string('exportdirectory_desc', 'mod_exportgrades'),
-            ''
-        ));
+                $settings->add(new admin_setting_configtime('mod_exportgrades/monthly_hour', 'mod_exportgrades/monthly_minute',
+                    get_string('time', 'mod_exportgrades'), 
+                    get_string('selecttime', 'mod_exportgrades'), 
+                    array('h' => 8, 'm' => 0), PARAM_INT, 'monthly-options hidden')); 
 
-        // Añadir opción de selección de idioma
+        //Menu desplegable con las carreras y materias (muestra las categorias)
+        $categories = \core_course_category::make_categories_list();
+        $formatted_categories = [];
+        foreach ($categories as $id => $name) {
+        // Añade un guion por nivel de profundidad para entender la jerarquía
+            $depth = substr_count($name, '/');
+            $formatted_name = str_repeat('-', $depth) . ' ' . trim($name);
+            $formatted_categories[$id] = $formatted_name;
+        }
+                    
         $settings->add(new admin_setting_configselect(
-            'mod_exportgrades/language',
-            get_string('language', 'mod_exportgrades'),
-            get_string('configlanguage_desc', 'mod_exportgrades'), // Corrige aquí para que coincida con tu archivo lang
-            $current_language, 
-            $langoptions
-            
+            'mod_exportgrades/category',
+            get_string('category', 'mod_exportgrades'),
+            get_string('selectcategory', 'mod_exportgrades'),  
+            '',
+            $formatted_categories
         ));
-
-         // Añadir opciones de grupo
-         $settings->add(new admin_setting_configselect(
+                    
+        //Menu desplegable de grupo
+        $settings->add(new admin_setting_configselect(
             'mod_exportgrades/group',
             get_string('group', 'mod_exportgrades'),
             get_string('group_desc', 'mod_exportgrades'),
@@ -62,28 +92,41 @@ if ($hassiteconfig) {
             )
         ));
 
-        // Añadir campo personalizado de autocompletado para usuarios
+        // Campo de búsqueda de usuarios
         $settings->add(new admin_setting_configtext(
             'mod_exportgrades/user_field',
             get_string('users', 'mod_exportgrades'),
             get_string('users_desc', 'mod_exportgrades'),
-            '', // Optional default value
-            array('disabled' => true) // Disable the text field
-          ));
+            ''
+        ));
 
+        // Campo para el directorio de exportación
+        $settings->add(new admin_setting_configtext(
+            'mod_exportgrades/exportdirectory',
+            get_string('exportdirectory', 'mod_exportgrades'),
+            get_string('exportdirectory_desc', 'mod_exportgrades'),
+            ''
+        ));
+
+
+        // Campo para ID de carpeta de Google Drive
+        $settings->add(new admin_setting_configtext(
+            'mod_exportgrades/drive_folder_id',
+            get_string('drivefolderid', 'mod_exportgrades'),
+            get_string('drivefolderid_desc', 'mod_exportgrades'),
+            ''
+        ));
+
+        // Campo para cargar las credenciales del servicio de Google Drive
+        $settings->add(new admin_setting_configstoredfile(
+            'mod_exportgrades/drive_service_account_credentials',
+            get_string('drivecredentials', 'mod_exportgrades'),
+            get_string('drivecredentials_desc', 'mod_exportgrades'),
+            'drivecredentials'  // Área de archivo en la que se almacenará el archivo
+        ));
+
+        
         $ADMIN->add('modsettings', $settings);
     }
 }
-
-function get_user_field_html() {
-    global $PAGE;
-
-    // Incluir JavaScript solo en la página de configuraciones relevantes
-    $PAGE->requires->js_call_amd('mod_exportgrades/user_selector', 'init');
-
-    // HTML para el campo de búsqueda de usuarios
-    $html = '<input type="text" id="user_selector" />';
-    $html .= '<div id="user_selector_results"></div>';
-
-    return $html;
-}
+?>
