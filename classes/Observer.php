@@ -36,9 +36,9 @@ class Observer
             // Obtenemos el task_scheduled de la DB
             $existing_task = $DB->get_record('task_scheduled', array('classname' => $default_task['classname']));
 
-            // Si ya existe una scheduled task la actualizamos y reseteamos el resto a default
-            if ($existing_task) {
 
+            if ($existing_task) {
+            // Si ya existe una scheduled task la actualizamos y reseteamos el resto a default
                 $existing_task->minute = $default_task['minute'];
                 $existing_task->hour = $default_task['hour'];
                 $existing_task->day = $default_task['day'];
@@ -47,10 +47,10 @@ class Observer
                 $existing_task->disabled = $default_task['disabled'];
                 switch ($export_frequency) {
                     case 'daily':
-                        $existing_task->hour = '0';
+                        $existing_task->day = '*/1';
                         break;
                     case 'weekly':
-                        $existing_task->dayofweek = '0';
+                        $existing_task->day = '*/7';
                         $existing_task->hour = '0';
                         break;
                     case 'monthly':
@@ -60,11 +60,12 @@ class Observer
                 }
 
                 $DB->update_record('task_scheduled', $existing_task);
-            } else {
-                // Insert a new task
-                $DB->insert_record('task_scheduled', (object)$default_task);
-            }
+        } else {
+            // Insert a new task
+            $DB->insert_record('task_scheduled', (object)$default_task);
         }
+
     }
 
+}
 }

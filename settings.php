@@ -110,13 +110,16 @@ if ($hassiteconfig) {
             )
         ));
 
-        // Campo de búsqueda de usuarios
-        $settings->add(new admin_setting_configtext(
-            'mod_exportgrades/user_field',
-            get_string('users', 'mod_exportgrades'),
-            get_string('users_desc', 'mod_exportgrades'),
-            ''
-        ));
+
+        // Añadir campo personalizado de autocompletado para usuarios
+        // $settings->add(new admin_setting_configtext(
+        //     'mod_exportgrades/user_field',
+        //     get_string('users', 'mod_exportgrades'),
+        //     get_string('users_desc', 'mod_exportgrades'),
+        //     '', // Optional default value
+        //     array('disabled' => true) // Disable the text field
+        //   ));
+
 
         // Campo para el directorio de exportación
         $settings->add(new admin_setting_configtext(
@@ -147,4 +150,6 @@ if ($hassiteconfig) {
         $ADMIN->add('modsettings', $settings);
     }
 }
+
 ?>
+
