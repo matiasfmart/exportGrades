@@ -1,15 +1,26 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
 global $PAGE;
+require_once($CFG->dirroot.'/mod/exportgrades/lib.php');
 
 if ($hassiteconfig) {
     $settings = new admin_settingpage('mod_exportgrades_settings', get_string('pluginname', 'mod_exportgrades'));
 
     if ($ADMIN->fulltree) {
+
+
+    // Añadir el código JavaScript antes de la configuración select de usuarios y grupos
+          echo '<script>';
+          echo 'var allUsersOptionText = "' . addslashes(get_string('all')) . '";';
+          echo '</script>';
+
+
         // Requisitos de recursos
         $PAGE->requires->jquery();
         $PAGE->requires->js('/mod/exportgrades/amd/src/admin.js');
         $PAGE->requires->css('/mod/exportgrades/styles/styles.css');
+        $PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
+        $PAGE->requires->js('/mod/exportgrades/js/ajax_get_users.js');
 
         // Configuración de frecuencia
         $frequencyOptions = [
@@ -96,29 +107,8 @@ if ($hassiteconfig) {
             $formatted_categories
         ));
                     
-        //Menu desplegable de grupo
-        $settings->add(new admin_setting_configselect(
-            'mod_exportgrades/group',
-            get_string('group', 'mod_exportgrades'),
-            get_string('group_desc', 'mod_exportgrades'),
-            '',
-            array(
-                'todas' => get_string('all', 'mod_exportgrades'),
-                'notas_finales' => get_string('finalgrades', 'mod_exportgrades'),
-                'notas_belgrano' => get_string('belgranogrades', 'mod_exportgrades'),
-                'notas_yatay' => get_string('yataygrades', 'mod_exportgrades')
-            )
-        ));
+        
 
-
-        // Añadir campo personalizado de autocompletado para usuarios
-        // $settings->add(new admin_setting_configtext(
-        //     'mod_exportgrades/user_field',
-        //     get_string('users', 'mod_exportgrades'),
-        //     get_string('users_desc', 'mod_exportgrades'),
-        //     '', // Optional default value
-        //     array('disabled' => true) // Disable the text field
-        //   ));
 
 
         // Campo para el directorio de exportación
@@ -146,9 +136,96 @@ if ($hassiteconfig) {
             'drivecredentials'  // Área de archivo en la que se almacenará el archivo
         ));
 
+     // Obtener la jerarquía de cursos
+        $course_hierarchy = get_course_hierarchy();
+
+        // Crear el array de opciones para el desplegable
+        $options = array();
+
+        foreach ($course_hierarchy as $category) {
+            foreach ($category['courses'] as $course_id => $course_name) {
+                $options[$course_id] = $category['name'] . ' - ' . $course_name;
+            }
+        }
+
+        $settings->add(new admin_setting_configselect(
+            'mod_exportgrades/courseid',
+            get_string('selectcourse', 'mod_exportgrades'),
+            '',
+            0,
+            $options
+        ));
+
         
         $ADMIN->add('modsettings', $settings);
     }
+
+
+
+
+// Obtener las opciones del menú desplegable de grupos
+$group_options = get_all_groups_menu();
+
+// Agregar la configuración select para el grupo
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/group',
+    get_string('group', 'mod_exportgrades'),
+    get_string('group_desc', 'mod_exportgrades'),
+   '',
+    $group_options
+));
+
+$settings->add($group_select);//agregado despues 16:08
+
+
+//DESPLEGABLE DE USUARIOS SEGUN CURSO Y GRUPO SELECCIONADO
+
+
+// Agregar la configuración select para el curso y grupo
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/courseid',
+    get_string('selectcourse', 'mod_exportgrades'),
+    '',
+    0,
+    $options
+));
+
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/group',
+    get_string('group', 'mod_exportgrades'),
+    get_string('group_desc', 'mod_exportgrades'),
+    '',
+    $group_options
+));
+
+ // Contenedor para la lista de usuarios
+ echo '<div id="users-dropdown-container">' . html_writer::select(array('' => get_string('all')), 'mod_exportgrades_users', '', array('' => get_string('all'))) . '</div>';
+
+ // Agregar script JavaScript al final de la página
+ $PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
+
+ // Agregar la configuración de página a la administración de Moodle
+ $ADMIN->add('modsettings', $settings);
+
+
+
+// Configurar la lista desplegable de usuarios
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/users',
+    get_string('users', 'mod_exportgrades'),
+    get_string('users_desc', 'mod_exportgrades'),
+    '',
+    array('' => get_string('all'))  // Inicialmente solo una opción "Todos"
+));
+
+// Agregar script JavaScript al final de la página
+$PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
+
+// Agregar la configuración de página a la administración de Moodle
+$ADMIN->add('modsettings', $settings);
+
+
+
 }
 
 ?>

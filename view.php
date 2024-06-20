@@ -2,8 +2,13 @@
 require(__DIR__.'/../../config.php');
 require_once(__DIR__.'/lib.php');
 
+global $DB, $OUTPUT, $PAGE;
+
 $id = optional_param('id', 0, PARAM_INT);
 $e = optional_param('e', 0, PARAM_INT);
+
+
+$group = $DB->get_record('groups', array('id' => $instance->groupid), 'name');
 
 if ($id) {
     $cm = get_coursemodule_from_id('exportgrades', $id, 0, false, MUST_EXIST);
@@ -39,25 +44,33 @@ $drive_folder_id = get_config('mod_exportgrades', 'drive_folder_id');
 $drive_service_account_credentials = get_config('mod_exportgrades', 'drive_service_account_credentials');
 $export_directory = get_config('mod_exportgrades', 'exportdirectory'); 
 
+// Obtener los grupos existentes
+$groups = $DB->get_records_menu('groups', array('courseid' => $course->id), '', 'id, name');
+
+// Obtener el grupo seleccionado 
+$selected_groupid = optional_param('groupid', 0, PARAM_INT);
+
 // Procesar formulario
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $export_frequency = optional_param('export_frequency', 'daily', PARAM_TEXT);
     $drive_folder_id = optional_param('drive_folder_id', '', PARAM_TEXT);
     $drive_service_account_credentials = optional_param('drive_service_account_credentials', '', PARAM_RAW);
+    $selected_groupid = optional_param('groupid', 0, PARAM_INT);
 
     set_config('drive_folder_id', $drive_folder_id, 'mod_exportgrades');
     set_config('drive_service_account_credentials', $drive_service_account_credentials, 'mod_exportgrades');
+  
+    //set_config('groupid', $selected_groupid, 'mod_exportgrades');
 
-// Generar y redirigir al script de descarga
-$file_info = export_selected_grades_to_csv($course->id);
-$filepath = $file_info['temp_file'];
-$filename = $file_info['filename'];
+    // Generar y redirigir al script de descarga
+    $file_info = export_selected_grades_to_csv($course->id);
+    $filepath = $file_info['temp_file'];
+    $filename = $file_info['filename'];
 
+    // Subir el archivo CSV a Google Drive
+    uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id);
 
-// Subir el archivo CSV a Google Drive
-uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id);
-
-redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($filepath), 'filename' => $filename)));
+    redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($filepath), 'filename' => $filename)));
 
     if ($result) {
         $temp_file = $result['temp_file'];
@@ -131,22 +144,25 @@ echo '<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min
 // Formulario
 echo '<form method="post" class="custom-form">';
 
-
 echo '<div class="form-group">';
 echo '<label for="export_directory">' . get_string('exportdirectory', 'mod_exportgrades') . '</label>';
 echo '<input type="text" id="export_directory" name="export_directory" class="form-control" value="' . s($export_directory) . '">';
 echo '</div>';
+
 echo '<div class="form-group">';
 echo '<label for="drive_folder_id">' . get_string('drivefolderid', 'mod_exportgrades') . '</label>';
 echo '<input type="text" id="drive_folder_id" name="drive_folder_id" class="form-control" value="' . s($drive_folder_id) . '">';
 echo '</div>';
+
 echo '<div>';
 echo '<label for="drive_service_account_credentials">' . get_string('drivecredentials', 'mod_exportgrades') . '</label>';
 echo '<input type="file" id="drive_service_account_credentials" name="drive_service_account_credentials" class="form-control">';
-echo '<div class="form-group">';
-echo '<input type="submit" value="' . get_string('savechanges') . '">';
 echo '</div>';
-echo '</form>';
 
+echo '<div class="form-group">';
+echo '<input type="submit" value="' . get_string('savechanges', 'mod_exportgrades') . '">';
+echo '</div>';
+
+echo '</form>';
 
 echo $OUTPUT->footer();
