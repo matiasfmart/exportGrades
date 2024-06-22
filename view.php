@@ -149,6 +149,7 @@ echo '<label for="export_directory">' . get_string('exportdirectory', 'mod_expor
 echo '<input type="text" id="export_directory" name="export_directory" class="form-control" value="' . s($export_directory) . '">';
 echo '</div>';
 
+//Google Drive
 echo '<div class="form-group">';
 echo '<label for="drive_folder_id">' . get_string('drivefolderid', 'mod_exportgrades') . '</label>';
 echo '<input type="text" id="drive_folder_id" name="drive_folder_id" class="form-control" value="' . s($drive_folder_id) . '">';
