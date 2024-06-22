@@ -1,7 +1,10 @@
 <?php
 
 defined('MOODLE_INTERNAL') || die();
+define('CLIENT_SECRET_PATH', __DIR__ . '/config/client_secret.json');
+
 require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php');
+
 
 function exportgrades_supports($feature) {
     switch ($feature) {
@@ -60,42 +63,7 @@ function obtener_notas_curso($courseid) {
             GROUP BY u.id, c.id, gi.id, gg.finalgrade
             ORDER BY u.id, gi.itemname";
 
-    // Use get_recordset_sql() para manejar registros sin clave única.
     return $DB->get_recordset_sql($sql, ['courseid' => $courseid]);
-}
-
-
-function get_course_categories_tree($courseid) {
-    global $DB;
-    $categories = [];
-
-    if ($courseid <= 0) {
-        throw new moodle_exception('Invalid course ID');
-    }
-
-    $course = $DB->get_record('course', ['id' => $courseid], '*', MUST_EXIST);
-    if (!$course) {
-        throw new moodle_exception('No se puede encontrar el curso en la base de datos');
-    }
-
-    // Obtener la categoría del curso
-    $category = $DB->get_record('course_categories', ['id' => $course->category], '*', MUST_EXIST);
-    if (!$category) {
-        throw new moodle_exception('No se puede encontrar la categoría del curso en la base de datos. ID de categoría: ' . $course->category);
-    }
-
-    // Recorrer las categorías hasta la raíz
-    while ($category) {
-        $categories[] = format_string($category->name);
-        if ($category->parent == 0) break;
-        $category = $DB->get_record('course_categories', ['id' => $category->parent], '*', MUST_EXIST);
-    }
-
-    if (empty($categories)) {
-        throw new moodle_exception('No se puede encontrar registro de datos en la tabla course_categories de la base de datos.');
-    }
-
-    return array_reverse($categories); // Esto asegura que la raíz esté primero
 }
 
 function export_selected_grades_to_csv($courseid) {
@@ -104,20 +72,19 @@ function export_selected_grades_to_csv($courseid) {
     $grades = obtener_notas_curso($courseid);
 
     if (empty($grades)) {
+        error_log("export_selected_grades_to_csv: No se encontraron notas para el curso ID: $courseid");
         return false;
     }
 
-    $categories = get_course_categories_tree($courseid);
-    $category_path = implode('_', $categories);
-
     $date = new DateTime();
     $datetime = $date->format('Ymd_His');
-    $filename = "{$category_path}_{$datetime}.csv";
+    $filename = "grades_course_{$courseid}_{$datetime}.csv";
 
     $temp_file = tempnam(sys_get_temp_dir(), 'export_grades_');
     $handle = fopen($temp_file, 'w');
     if (!$handle) {
-        die('No se pudo abrir el archivo temporal para escritura.');
+        error_log("export_selected_grades_to_csv: No se pudo abrir el archivo temporal para escritura.");
+        return false;
     }
 
     $headers = ['ID de Alumno', 'Nombre y Apellido', 'ID del Curso', 'Curso', 'Tarea', 'Nota', 'Nota Final'];
@@ -156,21 +123,42 @@ function export_selected_grades_to_csv($courseid) {
     }
 
     fclose($handle);
-    error_log("Archivo CSV generado: $temp_file con nombre: $filename");
+    error_log("export_selected_grades_to_csv: Archivo CSV generado en $temp_file con nombre: $filename");
 
     return ['temp_file' => $temp_file, 'filename' => $filename];
 }
 
-
 //subida al drive
+
 function uploadToGoogleDrive($filePath, $fileName) {
+
     $client = new Google_Client();
-    $client->setAuthConfig('config/client_secret.json');
+    // Utilizar la constante definida para la ruta del client_secret.json
+    $client_secret_path = CLIENT_SECRET_PATH;
+      // Verificar si el archivo client_secret.json existe
+    if (file_exists($client_secret_path)) {
+        // Configurar el cliente con el archivo client_secret.json
+        $client->setAuthConfig($client_secret_path);
+        //return $client;
+    } else {
+        throw new \Exception("Error: archivo client_secret.json no encontrado en $client_secret_path");
+    }
+
+    
+ 
     $client->addScope(Google_Service_Drive::DRIVE_FILE);
     $client->setAccessType('offline');
     $client->setPrompt('select_account consent');
 
+
+     // Verificación de existencia y acceso al archivo
+     
+    if (!file_exists($filePath) || !is_readable($filePath)) {
+        throw new \Exception("El archivo no existe o no se puede leer: $filePath");
+    }
+
     // Path to the token file
+    
     $tokenPath = 'config/token.json';
 
     if (file_exists($tokenPath)) {
@@ -257,6 +245,7 @@ function uploadToGoogleDrive($filePath, $fileName) {
         'parents' => array($folderId)
     ));
 
+    // Obtener el contenido del archivo
     $content = file_get_contents($filePath);
 
     $file = $service->files->create($fileMetadata, array(
@@ -268,7 +257,6 @@ function uploadToGoogleDrive($filePath, $fileName) {
 
     printf("File ID: %s\n", $file->id);
 }
-
 
 
 //obtener jerarquia de cursos
