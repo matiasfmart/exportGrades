@@ -67,8 +67,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $filepath = $file_info['temp_file'];
     $filename = $file_info['filename'];
 
+
+    // Verificar el contenido del objeto $course
+echo '<pre>';
+print_r($course);
+echo '</pre>';
+
     // Subir el archivo CSV a Google Drive
-    uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id);
+    uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id, $course);
+  
 
     redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($filepath), 'filename' => $filename)));
 

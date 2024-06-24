@@ -64,7 +64,7 @@ class grade_export_task extends scheduled_task {
 
                     // Subir el archivo a Google Drive
                       try {
-                        uploadToGoogleDrive($destination_directory, $filename, $drive_service_account_credentials, $drive_folder_id);
+                        uploadToGoogleDrive($destination_directory, $filename, $drive_service_account_credentials, $drive_folder_id, $course);
                         error_log("Archivo CSV subido a Google Drive: $filename");
                       } catch (Exception $e) {
                         error_log("Error al subir el archivo CSV a Google Drive: " . $e->getMessage());
