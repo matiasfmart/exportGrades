@@ -342,6 +342,73 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
     ));
 
     printf("File ID: %s\n", $file->id);
+
+// --- Añadir el archivo a la carpeta del año actual ---
+
+    // Obtener el año actual
+    $currentYear = date("Y");
+
+    // Buscar la carpeta del año actual
+    $yearFolderId = null;
+
+    $response = $service->files->listFiles(array(
+        'q' => "name contains '$currentYear' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+        'spaces' => 'drive',
+        'fields' => 'files(id, name)',
+    ));
+
+    if (count($response->files) > 0) {
+        // La carpeta del año actual ya existe
+        foreach ($response->files as $folder) {
+            if (strpos($folder->name, (string)$currentYear) !== false) {
+                $yearFolderId = $folder->id;
+                break;
+            }
+        }
+        printf("Carpeta del año actual encontrada con ID: %s\n", $yearFolderId);
+    } else {
+        // Crear la carpeta del año actual si no existe
+        $folderMetadata = new Google_Service_Drive_DriveFile(array(
+            'name' => $currentYear, // Nombre ejemplo para nueva carpeta
+            'mimeType' => 'application/vnd.google-apps.folder',
+            'parents' => array($drive_folder_id) // Especificar que la carpeta del año actual sea un subdirectorio de la carpeta raíz
+        ));
+
+        $folder = $service->files->create($folderMetadata, array(
+            'fields' => 'id'
+        ));
+
+        $yearFolderId = $folder->id;
+        printf("Nueva carpeta del año actual creada con ID: %s\n", $yearFolderId);
+    }
+
+    // Buscar y eliminar archivos existentes del curso en la carpeta del año actual
+    $response = $service->files->listFiles(array(
+        'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false and name contains '$course->fullname'",
+        'spaces' => 'drive',
+        'fields' => 'files(id, name, parents)',
+    ));
+
+    foreach ($response->files as $file) {
+        $fileId = $file->id;
+        $service->files->delete($fileId);
+        printf("Archivo del curso eliminado en la carpeta del año actual: %s\n", $file->name);
+    }
+
+    // Subir el nuevo archivo a la carpeta del año actual
+    $fileMetadata = new Google_Service_Drive_DriveFile(array(
+        'name' => $fileName,
+        'parents' => array($yearFolderId)
+    ));
+
+    $file = $service->files->create($fileMetadata, array(
+        'data' => $content,
+        'mimeType' => 'text/csv',
+        'uploadType' => 'multipart',
+        'fields' => 'id'
+    ));
+
+    printf("Nuevo archivo subido a la carpeta del año actual. File ID: %s\n", $file->id);
 }
 
 
