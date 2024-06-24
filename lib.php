@@ -280,6 +280,52 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
         }
     }
 
+    // Crear la carpeta "Historico" dentro de la última carpeta del curso si no existe
+    $historicFolderName = "Historico";
+    $response = $service->files->listFiles(array(
+        'q' => "name = '$historicFolderName' and mimeType = 'application/vnd.google-apps.folder' and '$currentFolderId' in parents and trashed = false",
+        'spaces' => 'drive',
+        'fields' => 'files(id, name)',
+    ));
+
+    $historicFolderId = null;
+    if (count($response->files) > 0) {
+        $historicFolderId = $response->files[0]->id;
+        printf("La carpeta 'Historico' ya existe con ID: %s\n", $historicFolderId);
+    } else {
+        $folderMetadata = new Google_Service_Drive_DriveFile(array(
+            'name' => $historicFolderName,
+            'mimeType' => 'application/vnd.google-apps.folder',
+            'parents' => array($currentFolderId)
+        ));
+
+        $folder = $service->files->create($folderMetadata, array(
+            'fields' => 'id'
+        ));
+
+        $historicFolderId = $folder->id;
+        printf("Nueva carpeta 'Historico' creada con ID: %s\n", $historicFolderId);
+    }
+
+    // Mover todos los archivos existentes a la carpeta "Historico"
+    $response = $service->files->listFiles(array(
+        'q' => "'$currentFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false",
+        'spaces' => 'drive',
+        'fields' => 'files(id, name, parents)',
+    ));
+
+    foreach ($response->files as $file) {
+        $fileId = $file->id;
+        $service->files->update($fileId, new Google_Service_Drive_DriveFile(),array(
+            'addParents' => $historicFolderId,
+            'removeParents' => $currentFolderId,
+            'fields' => 'id, parents'
+        ));
+        printf("Archivo movido a 'Historico': %s\n", $file->name);
+    }
+
+
+
     // Subir el archivo a la carpeta final
     $fileMetadata = new Google_Service_Drive_DriveFile(array(
         'name' => $fileName,
