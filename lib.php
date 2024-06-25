@@ -182,10 +182,36 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
     
     $tokenPath = 'config/token.json';
 
-    if (file_exists($tokenPath)) {
+if (file_exists($tokenPath)) {
         $accessToken = json_decode(file_get_contents($tokenPath), true);
-        $client->setAccessToken($accessToken);
+        if (json_last_error() === JSON_ERROR_NONE && isset($accessToken['access_token']) && isset($accessToken['refresh_token'])) {
+            $client->setAccessToken($accessToken);
+        } else {
+            // El token es inválido o no contiene los campos necesarios
+            $accessToken = null;
+        }
+    } else {
+        // El archivo token.json no existe
+        $accessToken = null;
     }
+
+    if (!$accessToken) {
+        printf("Token inválido o no encontrado. Por favor, visita la siguiente URL y autoriza el acceso:\n%s\n", $client->createAuthUrl());
+        $authCode = trim(fgets(STDIN));
+        $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);
+        $client->setAccessToken($accessToken);
+
+        // Guarda el token en el archivo
+        if (!file_exists(dirname($tokenPath))) {
+            mkdir(dirname($tokenPath), 0700, true);
+        }
+        file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+    }
+     
+
+
+
+
  
      // Verifica que el objeto $course contiene el campo fullname
     if (isset($course->fullname)) {
@@ -206,43 +232,27 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
 
     // Refresh the token if it's expired
     if ($client->isAccessTokenExpired()) {
-        if ($client->getRefreshToken()) {
-            $newAccessToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-            $client->setAccessToken($newAccessToken);
+        try {
+            if ($client->getRefreshToken()) {
+                $newAccessToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+                $client->setAccessToken($newAccessToken);
+            } else {
+                throw new \Exception("No se encontró el token de actualización (refresh token).");
+            }
 
-            // Save the new token to a file
             if (!file_exists(dirname($tokenPath))) {
                 mkdir(dirname($tokenPath), 0700, true);
             }
             file_put_contents($tokenPath, json_encode($client->getAccessToken()));
-        } else {
-            // Request authorization from the user
-            $authUrl = $client->createAuthUrl();
-            printf("Open the following link in your browser:\n%s\n", $authUrl);
-            print 'Enter verification code: ';
-            $authCode = trim(fgets(STDIN));
-
-            // Exchange authorization code for an access token
-            $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);
-            $client->setAccessToken($accessToken);
-
-            // Check to see if there was an error
-            if (array_key_exists('error', $accessToken)) {
-                throw new Exception(join(', ', $accessToken));
-            }
-
-            // Save the token to a file
-            if (!file_exists(dirname($tokenPath))) {
-                mkdir(dirname($tokenPath), 0700, true);
-            }
-            file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+        } catch (Exception $e) {
+            throw new \Exception("Error al refrescar el token de acceso: " . $e->getMessage());
         }
     }
 
-    // Validate the token format
+     // Verifica nuevamente el formato del token
     $tokenData = json_decode(file_get_contents($tokenPath), true);
     if (json_last_error() !== JSON_ERROR_NONE || !isset($tokenData['access_token'])) {
-        throw new Exception('Invalid token format');
+        throw new Exception('Formato de token inválido');
     }
 
     $service = new Google_Service_Drive($client);
