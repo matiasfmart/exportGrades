@@ -9,13 +9,13 @@ if ($hassiteconfig) {
     if ($ADMIN->fulltree) {
 
         // Requisitos de recursos
-       /*
+       
         $PAGE->requires->jquery();
         $PAGE->requires->js('/mod/exportgrades/amd/src/admin.js');
         $PAGE->requires->css('/mod/exportgrades/styles/styles.css');
         $PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
         $PAGE->requires->js('/mod/exportgrades/js/ajax_get_users.js');
-        */
+        
         // Configuración de frecuencia
         $frequencyOptions = [
             'daily' => get_string('daily', 'mod_exportgrades'),
@@ -130,7 +130,7 @@ if ($hassiteconfig) {
             'drivecredentials'  // Área de archivo en la que se almacenará el archivo
         ));
 
-        // Obtener la jerarquía de cursos
+     // Obtener la jerarquía de cursos
         $course_hierarchy = get_course_hierarchy();
 
         // Crear el array de opciones para el desplegable
@@ -151,49 +151,76 @@ if ($hassiteconfig) {
         ));
 
         
-        // Obtener las opciones del menú desplegable de grupos
-        $group_options = get_all_groups_menu();
-
-        // Agregar la configuración select para el grupo
-        $settings->add(new admin_setting_configselect(
-            'mod_exportgrades/group',
-            get_string('group', 'mod_exportgrades'),
-            get_string('group_desc', 'mod_exportgrades'),
-            '',
-            $group_options
-        ));
-
-        $settings->add($group_select);//agregado despues 16:08
-
-
-    //DESPLEGABLE DE USUARIOS SEGUN CURSO Y GRUPO SELECCIONADO
-
-
-    // Agregar la configuración select para el curso y grupo
-    $settings->add(new admin_setting_configselect(
-        'mod_exportgrades/courseid',
-        get_string('selectcourse', 'mod_exportgrades'),
-        '',
-        0,
-        $options
-    ));
-
-    $settings->add(new admin_setting_configselect(
-        'mod_exportgrades/group',
-        get_string('group', 'mod_exportgrades'),
-        get_string('group_desc', 'mod_exportgrades'),
-        '',
-        $group_options
-    ));
-
- 
-    // Agregar la configuración de página a la administración de Moodle
-    $ADMIN->add('modsettings', $settings);
-
-
+        $ADMIN->add('modsettings', $settings);
     }
-}
 
+
+
+
+// Obtener las opciones del menú desplegable de grupos
+$group_options = get_all_groups_menu();
+
+// Agregar la configuración select para el grupo
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/group',
+    get_string('group', 'mod_exportgrades'),
+    get_string('group_desc', 'mod_exportgrades'),
+   '',
+    $group_options
+));
+
+$settings->add($group_select);//agregado despues 16:08
+
+
+//DESPLEGABLE DE USUARIOS SEGUN CURSO Y GRUPO SELECCIONADO
+
+
+// Agregar la configuración select para el curso y grupo
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/courseid',
+    get_string('selectcourse', 'mod_exportgrades'),
+    '',
+    0,
+    $options
+));
+
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/group',
+    get_string('group', 'mod_exportgrades'),
+    get_string('group_desc', 'mod_exportgrades'),
+    '',
+    $group_options
+));
+
+ // Contenedor para la lista de usuarios
+ echo '<div id="users-dropdown-container">' . html_writer::select(array('' => get_string('all')), 'mod_exportgrades_users', '', array('' => get_string('all'))) . '</div>';
+
+ // Agregar script JavaScript al final de la página
+ $PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
+
+ // Agregar la configuración de página a la administración de Moodle
+ $ADMIN->add('modsettings', $settings);
+
+
+
+// Configurar la lista desplegable de usuarios
+$settings->add(new admin_setting_configselect(
+    'mod_exportgrades/users',
+    get_string('users', 'mod_exportgrades'),
+    get_string('users_desc', 'mod_exportgrades'),
+    '',
+    array('' => get_string('all'))  // Inicialmente solo una opción "Todos"
+));
+
+// Agregar script JavaScript al final de la página
+$PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
+
+// Agregar la configuración de página a la administración de Moodle
+$ADMIN->add('modsettings', $settings);
+
+
+
+}
 
 ?>
 
