@@ -30,14 +30,38 @@ if ($hassiteconfig) {
             $frequencyOptions
         ));
 
-        // Configuraciones Diarias
-        $settings->add(new admin_setting_configtime(
-            'mod_exportgrades/daily_hour',
-            'mod_exportgrades/daily_minute',
-            get_string('time', 'mod_exportgrades'),
+
+        // Opciones predefinidas para la hora
+        $time_options = [
+            '1' => '1',
+            '2' => '2',
+            '3' => '3',
+            '4' => '4',
+            '5' => '5',
+            '6' => '6',
+            '7' => '7',
+            '8' => '8',
+            '9' => '9',
+            '10' => '10',
+            '11' => '11',
+            '12' => '12',
+            '13' => '13',
+            '14' => '14',
+            '15' => '15',
+            '16' => '16',
+            '17' => '17',
+            '18' => '18',
+            '19' => '19'
+        ];
+        // Campo para configurar la hora (select)
+        $settings->add(new admin_setting_configselect(
+            'mod_exportgrades/hour',
+            get_string('time', 'mod_exportgrades'), 
             get_string('selecttime', 'mod_exportgrades'),
-            ['h' => 8, 'm' => 0], PARAM_INT, 'daily-options hidden'
+            '12:00', // Valor por defecto
+            $time_options // Opciones del select
         ));
+
 
         // Configuraciones Semanales
         $weekDays = [
@@ -56,13 +80,7 @@ if ($hassiteconfig) {
             '', $weekDays, PARAM_NOTAGS, 'weekly-options hidden'
         ));
 
-        $settings->add(new admin_setting_configtime(
-            'mod_exportgrades/weekly_hour',
-            'mod_exportgrades/weekly_minute',
-            get_string('time', 'mod_exportgrades'),
-            get_string('selecttime', 'mod_exportgrades'),
-            ['h' => 8, 'm' => 0], PARAM_INT, 'weekly-options hidden'
-        ));
+        
 
         // Configuraciones Mensuales
         $settings->add(new admin_setting_configtext(
@@ -72,16 +90,6 @@ if ($hassiteconfig) {
             1, PARAM_INT, 'monthly-options hidden'
         )); 
 
-        $settings->add(new admin_setting_configtime(
-            'mod_exportgrades/monthly_hour', // Nombre de la configuración para la hora
-            'mod_exportgrades/monthly_minute', // Nombre de la configuración para los minutos
-            get_string('time', 'mod_exportgrades'), // Label de la configuración
-            get_string('selecttime', 'mod_exportgrades'), // Descripción o texto de ayuda
-            ['h' => 8, 'm' => 0], // Valores por defecto: 8 horas y 0 minutos
-            PARAM_INT, // Tipo de parámetro
-            'monthly-options hidden' // Clases CSS para controlar la visibilidad
-        ));
-        
 
         //Menu desplegable con las carreras y materias (muestra las categorias)
         $categories = \core_course_category::make_categories_list();
