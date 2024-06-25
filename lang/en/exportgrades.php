@@ -50,6 +50,5 @@ $string['category'] = 'Category';
 $string['selectcategory'] = 'Choose a category';
 $string['pluginsettings'] = 'Export Grades Settings';
 $string['selectcourse'] = 'Select course';
-$string['exportgrades'] = 'Export Grades';
 $string['selectgroup'] = 'Select a group';
 $string['selectgroupdesc'] = 'Select a group to export grades from';
