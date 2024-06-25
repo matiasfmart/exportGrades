@@ -17,9 +17,13 @@ class Observer
         global $DB;
 
         // Verificar si las configuraciones de frecuencia han cambiado
-        if ($event->other['plugin'] === 'mod_exportgrades' && $event->other['name'] === 'export_frequency') {
+        if ($event->other['plugin'] === 'mod_exportgrades') {
             // Obtener la frecuencia actual
             $export_frequency = get_config('mod_exportgrades', 'export_frequency');
+            $exportgrades_settings = get_config('mod_exportgrades');
+
+            // Ejemplo de cómo acceder a la hora configurada
+            $hour_setting = $exportgrades_settings->hour;
 
             // Eliminar todas las instancias existentes de la tarea específica
             $DB->delete_records('task_scheduled', array('classname' => 'mod_exportgrades\task\grade_export_task'));
@@ -30,8 +34,8 @@ class Observer
                     $default_task = array(
                         'classname' => 'mod_exportgrades\task\grade_export_task',
                         'blocking' => 0,
-                        'minute' => '0',
-                        'hour' => '0',
+                        'minute' => '*',
+                        'hour' => $hour_setting,
                         'day' => '*/1',
                         'month' => '*',
                         'dayofweek' => '*',
@@ -42,11 +46,11 @@ class Observer
                     $default_task = array(
                         'classname' => 'mod_exportgrades\task\grade_export_task',
                         'blocking' => 0,
-                        'minute' => '0',
-                        'hour' => '0',
+                        'minute' => '*',
+                        'hour' => $hour_setting,
                         'day' => '*/7',
                         'month' => '*',
-                        'dayofweek' => '0',
+                        'dayofweek' => '*',
                         'disabled' => 0
                     );
                     break;
@@ -54,21 +58,9 @@ class Observer
                     $default_task = array(
                         'classname' => 'mod_exportgrades\task\grade_export_task',
                         'blocking' => 0,
-                        'minute' => '0',
-                        'hour' => '0',
+                        'minute' => '*',
+                        'hour' => $hour_setting,
                         'day' => '*/31',
-                        'month' => '*',
-                        'dayofweek' => '*',
-                        'disabled' => 0
-                    );
-                    break;
-                default:
-                    $default_task = array(
-                        'classname' => 'mod_exportgrades\task\grade_export_task',
-                        'blocking' => 0,
-                        'minute' => '0',
-                        'hour' => '2',
-                        'day' => '*/20',
                         'month' => '*',
                         'dayofweek' => '*',
                         'disabled' => 0
