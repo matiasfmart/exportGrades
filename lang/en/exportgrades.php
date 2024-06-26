@@ -53,3 +53,5 @@ $string['selectcourse'] = 'Select course';
 $string['selectgroup'] = 'Select a group';
 $string['selectgroupdesc'] = 'Select a group to export grades from';
 $string['savechanges'] = 'Save changes';
+$string['error_empty_drivecredentials'] = 'The Google Drive service account credentials cannot be empty. Either upload a file or ensure that client_secret.json exists in the config folder.';
+$string['error_wrong_filename'] = 'The uploaded file must be named client_secret.json.';

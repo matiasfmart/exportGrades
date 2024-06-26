@@ -1,7 +1,8 @@
 <?php
 defined('MOODLE_INTERNAL') || die();
-//global $PAGE;
-require_once($CFG->dirroot.'/mod/exportgrades/lib.php');
+global $PAGE;
+require_once($CFG->dirroot . '/mod/exportgrades/lib.php');
+require_once($CFG->dirroot . '/mod/exportgrades/classes/setting/drive_service_account_credentials.php');
 
 if ($hassiteconfig) {
     $settings = new admin_settingpage('mod_exportgrades_settings', get_string('pluginname', 'mod_exportgrades'));
@@ -48,7 +49,8 @@ if ($hassiteconfig) {
         // Campo para configurar la hora (select)
         $settings->add(new admin_setting_configselect(
             'mod_exportgrades/hour',
-            get_string('time', 'mod_exportgrades'), 
+
+            get_string('time', 'mod_exportgrades'),
             get_string('selecttime', 'mod_exportgrades'),
             '12:00', // Valor por defecto
             $time_options // Opciones del select
@@ -72,7 +74,6 @@ if ($hassiteconfig) {
             '', $weekDays, PARAM_NOTAGS, 'weekly-options hidden'
         ));
 
-        
 
         // Configuraciones Mensuales
         $settings->add(new admin_setting_configtext(
@@ -113,6 +114,22 @@ if ($hassiteconfig) {
     // Agregar la configuración de página a la administración de Moodle
     $ADMIN->add('modsettings', $settings);
 
+//        // Campo para cargar las credenciales del servicio de Google Drive
+//        $settings->add(new admin_setting_configstoredfile(
+//            'mod_exportgrades/drive_service_account_credentials',
+//            get_string('drivecredentials', 'mod_exportgrades'),
+//            get_string('drivecredentials_desc', 'mod_exportgrades'),
+//            'drivecredentials'  // Área de archivo en la que se almacenará el archivo
+//        ));
+        $settings->add(new mod_exportgrades_drive_service_account_credentials(
+            'mod_exportgrades/drive_service_account_credentials',
+            get_string('drivecredentials', 'mod_exportgrades'),
+            get_string('drivecredentials_desc', 'mod_exportgrades'),
+            'drivecredentials'
+        ));
+
+        // Agregar la configuración de página a la administración de Moodle
+        $ADMIN->add('modsettings', $settings);
 
     }
 }
