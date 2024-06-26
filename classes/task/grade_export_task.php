@@ -63,22 +63,22 @@ class grade_export_task extends scheduled_task {
                         }
                     } else {
                         // Mover el archivo CSV al directorio destino
-                        $destination_path = $destination_directory . $filename;
+                        $destination_path = $destination_directory . DIRECTORY_SEPARATOR . $filename;
 
                         if (rename($filepath, $destination_path)) {
                             // Éxito al mover el archivo, aquí puedes registrar o realizar otras acciones necesarias
                             error_log("grade_export_task: Archivo CSV movido correctamente a $destination_path");
+
+                            // Subir el archivo a Google Drive
+                            try {
+                                uploadToGoogleDrive($destination_path, $filename, $drive_service_account_credentials, $drive_folder_id, $course);
+                                error_log("Archivo CSV subido a Google Drive: $filename");
+                            } catch (Exception $e) {
+                                error_log("Error al subir el archivo CSV a Google Drive: " . $e->getMessage());
+                            }
                         } else {
                             // Manejar errores si no se pudo mover el archivo
                             error_log("grade_export_task: Error al mover el archivo CSV a $destination_path");
-                        }
-
-                        // Subir el archivo a Google Drive
-                        try {
-                            uploadToGoogleDrive($destination_path, $filename, $drive_service_account_credentials, $drive_folder_id, $course);
-                            error_log("Archivo CSV subido a Google Drive: $filename");
-                        } catch (Exception $e) {
-                            error_log("Error al subir el archivo CSV a Google Drive: " . $e->getMessage());
                         }
                     }
 
@@ -122,5 +122,4 @@ class grade_export_task extends scheduled_task {
         return ($current_time - $last_export_time) >= $export_frequency;
     }
 }
-
 ?>
