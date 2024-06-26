@@ -8,11 +8,7 @@ use core\task\manager; // Asegúrate de importar el namespace correcto
 
 class Observer
 {
-    /**
-     * Función que se ejecuta cuando se guardan las configuraciones.
-     *
-     * @param \core\event\config_log_created $event El objeto del evento.
-     */
+
     public static function config_updated(\core\event\config_log_created $event)
     {
         global $DB;
@@ -25,6 +21,8 @@ class Observer
 
             // Ejemplo de cómo acceder a la hora configurada
             $hour_setting = $exportgrades_settings->hour;
+            $weekly_day = get_config('mod_exportgrades', 'weekly_day');
+            $monthly_day = get_config('mod_exportgrades', 'monthly_day');
 
             // Definir la configuración por defecto de la tarea según la frecuencia
             switch ($export_frequency) {
@@ -34,7 +32,7 @@ class Observer
                         'blocking' => 0,
                         'minute' => '*',
                         'hour' => $hour_setting,
-                        'day' => '*',
+                        'day' => '*/1',
                         'month' => '*',
                         'dayofweek' => '*',
                         'disabled' => 0
@@ -48,7 +46,7 @@ class Observer
                         'hour' => $hour_setting,
                         'day' => '*',
                         'month' => '*',
-                        'dayofweek' => '0', // 0 representa el domingo
+                        'dayofweek' => $weekly_day, // 0 representa el domingo
                         'disabled' => 0
                     );
                     break;
@@ -58,8 +56,8 @@ class Observer
                         'blocking' => 0,
                         'minute' => '*',
                         'hour' => $hour_setting,
-                        'day' => '1',
-                        'month' => '*',
+                        'day' => '*',
+                        'month' => $monthly_day,
                         'dayofweek' => '*',
                         'disabled' => 0
                     );
@@ -75,8 +73,11 @@ class Observer
                     $task->hour = $default_task['hour'];
                     $task->day = $default_task['day'];
                     $task->dayofweek = $default_task['dayofweek'];
+                    $task->month = $default_task['month'];
                     $task->disabled = $default_task['disabled'];
+                   
                     $DB->update_record('task_scheduled', $task);
+
                 }
             } else {
                 // Crear una nueva tarea si no existe

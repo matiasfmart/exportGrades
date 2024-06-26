@@ -38,13 +38,13 @@ if ($hassiteconfig) {
 
        // Configuraciones Semanales
         $weekDays = [
-            'lunes' => get_string('monday', 'mod_exportgrades'),
-            'martes' => get_string('tuesday', 'mod_exportgrades'),
-            'miércoles' => get_string('wednesday', 'mod_exportgrades'),
-            'jueves' => get_string('thursday', 'mod_exportgrades'),
-            'viernes' => get_string('friday', 'mod_exportgrades'),
-            'sábado' => get_string('saturday', 'mod_exportgrades'),
-            'domingo' => get_string('sunday', 'mod_exportgrades')
+            '1' => get_string('monday', 'mod_exportgrades'),
+            '2' => get_string('tuesday', 'mod_exportgrades'),
+            '3' => get_string('wednesday', 'mod_exportgrades'),
+            '4' => get_string('thursday', 'mod_exportgrades'),
+            '5' => get_string('friday', 'mod_exportgrades'),
+            '6' => get_string('saturday', 'mod_exportgrades'),
+            '0' => get_string('sunday', 'mod_exportgrades')
         ];
         $settings->add(new admin_setting_configselect(
             'mod_exportgrades/weekly_day',

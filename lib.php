@@ -47,33 +47,118 @@ function exportgrades_delete_instance($id) {
     return true;
 }
 
-function obtener_notas_curso($courseid,  $selected_users = null) {
+function obtener_notas_curso($courseid, $selected_users = null) {
     global $DB;
 
-    
+    // Construcción de la consulta SQL
+    $sql = "
+        SELECT 
+            u.id AS userid,
+            u.lastname AS 'Apellido(s)',
+            u.firstname AS 'Nombre',
+            u.username AS 'Nombre de usuario',
+            '-' AS 'Institución',
+            'ASC' AS 'Departamento',
+            ccat1.name AS '1-Sede',
+            ccat2.name AS '2-Carrera',
+            'class',
+            g.id AS groupid,
+            g.name AS 'Grupo',
+            '10' AS 'Asistencia',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Carpeta Final del Proyecto (Documentación)' AND gg.userid = u.id) AS 'Carpeta Final del Proyecto (Documentación)',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Carpeta Final del Proyecto (Documentación) - Recuperatorio' AND gg.userid = u.id) AS 'Carpeta Final del Proyecto (Documentación) - Recuperatorio',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Carpeta del Programador' AND gg.userid = u.id) AS 'Carpeta del Programador',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Carpeta del Proyecto' AND gg.userid = u.id) AS 'Carpeta del Proyecto',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Conformación de los Grupos y Elección de 2 posibles Proyectos' AND gg.userid = u.id) AS 'Conformación de los Grupos y Elección de 2 posibles Proyectos',
+            c.fullname AS 'Curso',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Entrega de Aplicativo (Entrega)' AND gg.userid = u.id) AS 'Entrega de Aplicativo (Entrega)',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Entrega de Aplicativo (Recuperatorio)' AND gg.userid = u.id) AS 'Entrega de Aplicativo (Recuperatorio)',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Nota Final 1°Llamado Diciembre' AND gg.userid = u.id) AS 'Nota Final 1°Llamado Diciembre',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Nota Final 1°Llamado Febrero' AND gg.userid = u.id) AS 'Nota Final 1°Llamado Febrero',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Nota Final 2°Llamado Diciembre' AND gg.userid = u.id) AS 'Nota Final 2°Llamado Diciembre',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Nota Final 2°Llamado Febrero' AND gg.userid = u.id) AS 'Nota Final 2°Llamado Febrero',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)' AND gg.userid = u.id) AS 'Nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Nota Final Llamado Julio' AND gg.userid = u.id) AS 'Nota Final Llamado Julio',
+            (SELECT gg.finalgrade 
+             FROM {grade_items} gi 
+             JOIN {grade_grades} gg ON gi.id = gg.itemid 
+             WHERE gi.itemname = 'Presentacion Proyecto Belgrano' AND gg.userid = u.id) AS 'Presentacion Proyecto Belgrano'
+        FROM 
+            {user} u
+        JOIN 
+            {user_enrolments} ue ON ue.userid = u.id
+        JOIN 
+            {enrol} e ON e.id = ue.enrolid
+        JOIN 
+            {course} c ON c.id = e.courseid
+        JOIN 
+            {course_categories} ccat1 ON ccat1.id = c.category
+        LEFT JOIN 
+            {course_categories} ccat2 ON ccat2.id = ccat1.parent
+        LEFT JOIN 
+            {groups_members} gm ON gm.userid = u.id
+        LEFT JOIN 
+            {groups} g ON g.id = gm.groupid
+        LEFT JOIN {role_assignments} ra ON ra.userid = u.id
+        WHERE 
+            u.deleted = 0
+            AND c.id = :courseid
+            AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')
+    ";
 
-    $sql = "SELECT u.id AS id_alumno, CONCAT(u.firstname, ' ', u.lastname) AS nombre_completo, c.id AS id_curso, c.fullname AS curso,
-            gi.itemname AS item, COALESCE(gg.finalgrade, 'Sin calificar') AS nota_item,
-            AVG(gg.finalgrade) OVER (PARTITION BY u.id, c.id) AS nota_final
-            FROM {user} u
-            JOIN {role_assignments} ra ON ra.userid = u.id
-            JOIN {context} ctx ON ctx.id = ra.contextid AND ctx.contextlevel = 50
-            JOIN {course} c ON c.id = ctx.instanceid
-            JOIN {grade_items} gi ON gi.courseid = c.id AND gi.itemtype != 'course'
-            LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = u.id
-            WHERE c.id = :courseid AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')";
-            
-            // Si se pasaron usuarios seleccionados, añadir filtro por esos usuarios
-            if (!empty($selected_users)) {
-                $user_ids = implode(',', array_map('intval', $selected_users));
-                $sql .= " AND u.id IN ($user_ids)";
-            }
+    // Si se pasaron usuarios seleccionados, añadir filtro por esos usuarios
+    if (!empty($selected_users)) {
+        $user_ids = implode(',', array_map('intval', $selected_users));
+        $sql .= " AND u.id IN ($user_ids)";
+    }
 
-            $sql .= " GROUP BY u.id, c.id, gi.id, gg.finalgrade
-             ORDER BY u.id, gi.itemname";
+    $sql .= " 
+        GROUP BY u.id, c.id
+        ORDER BY u.id
+    ";
 
     return $DB->get_recordset_sql($sql, ['courseid' => $courseid]);
 }
+
 
 function export_selected_grades_to_csv($courseid, $selected_users = null) {
     global $DB;
@@ -96,40 +181,48 @@ function export_selected_grades_to_csv($courseid, $selected_users = null) {
         return false;
     }
 
-    $headers = ['ID de Alumno', 'Nombre y Apellido', 'ID del Curso', 'Curso', 'Tarea', 'Nota', 'Nota Final'];
-    fputcsv($handle, $headers);
+    $headers = ['userid', 'Apellido(s)', 'Nombre', 'Nombre de usuario', 'Institución', 'Departamento', '1-Sede', '2-Carrera', 'class', 
+    'groupid', 'Grupo', 'Asistencia', 'Carpeta Final del Proyecto (Documentación)', 'Carpeta Final del Proyecto (Documentación) - Recuperatorio',
+    'Carpeta del Programador', 'Carpeta del Proyecto', 'Conformación de los Grupos y Elección de 2 posibles Proyectos', 'Entrega de Aplicativo (Entrega)', 
+    'Entrega de Aplicativo (Recuperatorio)', 'Nota Final 1°Llamado Diciembre', 'Nota Final 1°Llamado Febrero', 'Nota Final 2°Llamado Diciembre', 'Nota Final 2°Llamado Febrero',
+    'Nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)', 'Nota Final Llamado Julio', 'Presentacion Proyecto Belgrano'];
+ 
+        fputcsv($handle, $headers);
 
-    $current_alumno_id = null;
-    $current_curso_id = null;
-    foreach ($grades as $grade) {
-        if ($current_alumno_id !== $grade->id_alumno || $current_curso_id !== $grade->id_curso) {
-            if ($current_alumno_id !== null) {
-                // Agregar fila de promedio del alumno anterior
-                fputcsv($handle, [$current_alumno_id, $prev_nombre, $current_curso_id, $prev_curso, 'Promedio', '', $prev_nota_final]);
-            }
-            $current_alumno_id = $grade->id_alumno;
-            $current_curso_id = $grade->id_curso;
-        }
+         // $current_alumno_id = null;
+         // $current_curso_id = null;
 
+        foreach ($grades as $grade) {
         $data = [
-            $grade->id_alumno,
-            $grade->nombre_completo,
-            $grade->id_curso,
-            $grade->curso,
-            $grade->item,
-            $grade->nota_item,
-            ''  // La nota final se agrega al final de cada grupo de estudiantes
-        ];
+            $grade->userid,
+            $grade->{'Apellido(s)'},
+            $grade->Nombre,
+            $grade->{'Nombre de usuario'},
+            $grade->Institución,
+            $grade->Departamento,
+            $grade->{'1-Sede'},
+            $grade->{'2-Carrera'},
+            $grade->class,
+            $grade->groupid,
+            $grade->Grupo,
+            $grade->Asistencia,
+            $grade->{'Carpeta Final del Proyecto (Documentación)'},
+            $grade->{'Carpeta Final del Proyecto (Documentación) - Recuperatorio'},
+            $grade->{'Carpeta del Programador'},
+            $grade->{'Carpeta del Proyecto'},
+            $grade->{'Conformación de los Grupos y Elección de 2 posibles Proyectos'},
+            $grade->{'Entrega de Aplicativo (Entrega)'},
+            $grade->{'Entrega de Aplicativo (Recuperatorio)'},
+            $grade->{'Nota Final 1°Llamado Diciembre'},
+            $grade->{'Nota Final 1°Llamado Febrero'},
+            $grade->{'Nota Final 2°Llamado Diciembre'},
+            $grade->{'Nota Final 2°Llamado Febrero'},
+            $grade->{'Nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)'},
+            $grade->{'Nota Final Llamado Julio'},
+            $grade->{'Presentacion Proyecto Belgrano'}
+         ];
         fputcsv($handle, $data);
-        $prev_nombre = $grade->nombre_completo;
-        $prev_curso = $grade->curso;
-        $prev_nota_final = $grade->nota_final;
-    }
-
-    // Última fila para el último alumno
-    if ($current_alumno_id !== null) {
-        fputcsv($handle, [$current_alumno_id, $prev_nombre, $current_curso_id, $prev_curso, 'Promedio', '', $prev_nota_final]);
-    }
+       }
 
     fclose($handle);
     error_log("export_selected_grades_to_csv: Archivo CSV generado en $temp_file con nombre: $filename");
