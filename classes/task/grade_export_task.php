@@ -23,8 +23,7 @@ class grade_export_task extends scheduled_task {
 
         // Obtener la configuración del cliente de Google Drive
         $drive_folder_id = get_config('mod_exportgrades', 'drive_folder_id');
-        $drive_service_account_credentials = get_config('mod_exportgrades', 'drive_service_account_credentials');
-
+        $export_directory = get_config('mod_exportgrades', 'exportdirectory'); 
 
         $courses = $this->get_courses($context);
         error_log("grade_export_task: Cursos obtenidos: " . json_encode($courses));
@@ -49,7 +48,7 @@ class grade_export_task extends scheduled_task {
                     error_log("grade_export_task: Archivo CSV generado: $filepath, Nombre del archivo: $filename");
 
                     // Directorio destino para mover los archivos CSV
-                    $destination_directory = 'C:\\Users\\marce\\Downloads\\';
+                    $destination_directory = $export_directory;
 
                     // Mover el archivo CSV al directorio destino
                     $destination_path = $destination_directory . $filename; 
