@@ -1,10 +1,16 @@
 {
   "ExpandedNodes": [
     "",
+    "\\amd",
+    "\\amd\\src",
     "\\classes",
-    "\\classes\\task",
-    "\\exports"
+    "\\classes\\event",
+    "\\config",
+    "\\db",
+    "\\exports",
+    "\\lang",
+    "\\lang\\en"
   ],
-  "SelectedNode": "\\config.rar",
+  "SelectedNode": "\\classes\\Observer.php",
   "PreviewInSolutionExplorer": false
 }
