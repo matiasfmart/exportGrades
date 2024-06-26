@@ -92,6 +92,7 @@ if ($hassiteconfig) {
 
 
         //Menu desplegable con las carreras y materias (muestra las categorias)
+        /*
         $categories = \core_course_category::make_categories_list();
         $formatted_categories = [];
         foreach ($categories as $id => $name) {
@@ -110,7 +111,7 @@ if ($hassiteconfig) {
         ));
                     
         
-
+        */
 
 
         // Campo para el directorio de exportación
@@ -139,6 +140,7 @@ if ($hassiteconfig) {
         ));
 
         // Obtener la jerarquía de cursos
+        /*
         $course_hierarchy = get_course_hierarchy();
 
         // Crear el array de opciones para el desplegable
@@ -193,7 +195,7 @@ if ($hassiteconfig) {
         '',
         $group_options
     ));
-
+    */
  
     // Agregar la configuración de página a la administración de Moodle
     $ADMIN->add('modsettings', $settings);
