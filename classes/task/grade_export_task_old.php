@@ -50,37 +50,24 @@ class grade_export_task extends scheduled_task {
                     // Directorio destino para mover los archivos CSV
                     $destination_directory = $export_directory;
 
-                    // Verificar si el directorio destino está vacío
-                    if (empty($destination_directory)) {
-                        error_log("grade_export_task: El directorio de exportación está vacío. Subiendo directamente a Google Drive.");
+                    // Mover el archivo CSV al directorio destino
+                    $destination_path = $destination_directory . $filename; 
 
-                        // Subir directamente a Google Drive
-                        try {
-                            uploadToGoogleDrive($filepath, $filename, $drive_service_account_credentials, $drive_folder_id, $course);
-                            error_log("Archivo CSV subido a Google Drive: $filename");
-                        } catch (Exception $e) {
-                            error_log("Error al subir el archivo CSV a Google Drive: " . $e->getMessage());
-                        }
+                    if (rename($filepath, $destination_path)) {
+                        // Éxito al mover el archivo, aquí puedes registrar o realizar otras acciones necesarias
+                        error_log("grade_export_task: Archivo CSV movido correctamente a $destination_path");
                     } else {
-                        // Mover el archivo CSV al directorio destino
-                        $destination_path = $destination_directory . $filename;
-
-                        if (rename($filepath, $destination_path)) {
-                            // Éxito al mover el archivo, aquí puedes registrar o realizar otras acciones necesarias
-                            error_log("grade_export_task: Archivo CSV movido correctamente a $destination_path");
-                        } else {
-                            // Manejar errores si no se pudo mover el archivo
-                            error_log("grade_export_task: Error al mover el archivo CSV a $destination_path");
-                        }
-
-                        // Subir el archivo a Google Drive
-                        try {
-                            uploadToGoogleDrive($destination_path, $filename, $drive_service_account_credentials, $drive_folder_id, $course);
-                            error_log("Archivo CSV subido a Google Drive: $filename");
-                        } catch (Exception $e) {
-                            error_log("Error al subir el archivo CSV a Google Drive: " . $e->getMessage());
-                        }
+                        // Manejar errores si no se pudo mover el archivo
+                        error_log("grade_export_task: Error al mover el archivo CSV a $destination_path");
                     }
+
+                    // Subir el archivo a Google Drive
+                      try {
+                        uploadToGoogleDrive($destination_directory, $filename, $drive_service_account_credentials, $drive_folder_id, $course);
+                        error_log("Archivo CSV subido a Google Drive: $filename");
+                      } catch (Exception $e) {
+                        error_log("Error al subir el archivo CSV a Google Drive: " . $e->getMessage());
+                        }
 
                     // Registrar el último tiempo de exportación
                     set_config('last_export_time', $current_time, 'mod_exportgrades');
@@ -91,8 +78,6 @@ class grade_export_task extends scheduled_task {
         } else {
             error_log("grade_export_task: No es necesario exportar en este momento.");
         }
-
-        error_log("grade_export_task: Fin de la ejecución de la tarea.");
     }
 
     public function determine_context() {
