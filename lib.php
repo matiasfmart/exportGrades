@@ -47,8 +47,10 @@ function exportgrades_delete_instance($id) {
     return true;
 }
 
-function obtener_notas_curso($courseid) {
+function obtener_notas_curso($courseid,  $selected_users = null) {
     global $DB;
+
+    
 
     $sql = "SELECT u.id AS id_alumno, CONCAT(u.firstname, ' ', u.lastname) AS nombre_completo, c.id AS id_curso, c.fullname AS curso,
             gi.itemname AS item, COALESCE(gg.finalgrade, 'Sin calificar') AS nota_item,
@@ -59,17 +61,24 @@ function obtener_notas_curso($courseid) {
             JOIN {course} c ON c.id = ctx.instanceid
             JOIN {grade_items} gi ON gi.courseid = c.id AND gi.itemtype != 'course'
             LEFT JOIN {grade_grades} gg ON gg.itemid = gi.id AND gg.userid = u.id
-            WHERE c.id = :courseid AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')
-            GROUP BY u.id, c.id, gi.id, gg.finalgrade
-            ORDER BY u.id, gi.itemname";
+            WHERE c.id = :courseid AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')";
+            
+            // Si se pasaron usuarios seleccionados, añadir filtro por esos usuarios
+            if (!empty($selected_users)) {
+                $user_ids = implode(',', array_map('intval', $selected_users));
+                $sql .= " AND u.id IN ($user_ids)";
+            }
+
+            $sql .= " GROUP BY u.id, c.id, gi.id, gg.finalgrade
+             ORDER BY u.id, gi.itemname";
 
     return $DB->get_recordset_sql($sql, ['courseid' => $courseid]);
 }
 
-function export_selected_grades_to_csv($courseid) {
+function export_selected_grades_to_csv($courseid, $selected_users = null) {
     global $DB;
 
-    $grades = obtener_notas_curso($courseid);
+    $grades = obtener_notas_curso($courseid, $selected_users);
 
     if (empty($grades)) {
         error_log("export_selected_grades_to_csv: No se encontraron notas para el curso ID: $courseid");
@@ -423,7 +432,7 @@ if (file_exists($tokenPath)) {
 
 
 //obtener jerarquia de cursos
-
+/*
 function get_course_hierarchy() {
     global $DB;
 
@@ -448,7 +457,7 @@ function get_course_hierarchy() {
 
     return $hierarchy;
 }
-
+*/
 
 //GRUPOSSS
 
@@ -494,7 +503,7 @@ $params = [
 }
 */
 
-
+/*
 function ajax_get_users_by_course_and_group() {
     global $DB;
 
@@ -533,7 +542,41 @@ function ajax_get_users_by_course_and_group() {
 
     exit;
 }
+*/
+function get_all_users_menu($courseid) {
+    global $DB;
 
+    // Obtener todos los usuarios matriculados en el curso
+    $users = $DB->get_records_menu('user', array('deleted' => 0), '', 'id, CONCAT(firstname, " ", lastname) AS fullname');
+
+    // Formatear los usuarios para el menú desplegable (id => nombre completo)
+    $user_options = [];
+    foreach ($users as $userid => $fullname) {
+        $user_options[$userid] = format_string($fullname);
+    }
+
+    return $user_options;
+}
+
+function get_users_by_group($courseid, $groupid) {
+    global $DB;
+
+    if ($groupid > 0) {
+        $groupmembers = groups_get_members($groupid);
+        $userids = array_column($groupmembers, 'id');
+        $users = $DB->get_records_list('user', 'id', $userids);
+    } else {
+        // Si no se selecciona un grupo, obtener todos los usuarios del curso
+        $users = get_enrolled_users(context_course::instance($courseid), '', 0, 'u.id, u.firstname, u.lastname', 'u.lastname, u.firstname');
+    }
+
+    $user_options = [];
+    foreach ($users as $user) {
+        $user_options[$user->id] = fullname($user);
+    }
+
+    return $user_options;
+}
 
 
 
