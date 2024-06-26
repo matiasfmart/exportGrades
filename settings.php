@@ -8,14 +8,6 @@ if ($hassiteconfig) {
 
     if ($ADMIN->fulltree) {
 
-        // Requisitos de recursos
-       /*
-        $PAGE->requires->jquery();
-        $PAGE->requires->js('/mod/exportgrades/amd/src/admin.js');
-        $PAGE->requires->css('/mod/exportgrades/styles/styles.css');
-        $PAGE->requires->js_call_amd('mod_exportgrades/admin', 'init');
-        $PAGE->requires->js('/mod/exportgrades/js/ajax_get_users.js');
-        */
         // Configuración de frecuencia
         $frequencyOptions = [
             'daily' => get_string('daily', 'mod_exportgrades'),
@@ -91,29 +83,6 @@ if ($hassiteconfig) {
         )); 
 
 
-        //Menu desplegable con las carreras y materias (muestra las categorias)
-        /*
-        $categories = \core_course_category::make_categories_list();
-        $formatted_categories = [];
-        foreach ($categories as $id => $name) {
-        // Añade un guion por nivel de profundidad para entender la jerarquía
-            $depth = substr_count($name, '/');
-            $formatted_name = str_repeat('-', $depth) . ' ' . trim($name);
-            $formatted_categories[$id] = $formatted_name;
-        }
-                    
-        $settings->add(new admin_setting_configselect(
-            'mod_exportgrades/category',
-            get_string('category', 'mod_exportgrades'),
-            get_string('selectcategory', 'mod_exportgrades'),  
-            '',
-            $formatted_categories
-        ));
-                    
-        
-        */
-
-
         // Campo para el directorio de exportación
         $settings->add(new admin_setting_configtext(
             'mod_exportgrades/exportdirectory',
@@ -139,63 +108,7 @@ if ($hassiteconfig) {
             'drivecredentials'  // Área de archivo en la que se almacenará el archivo
         ));
 
-        // Obtener la jerarquía de cursos
-        /*
-        $course_hierarchy = get_course_hierarchy();
 
-        // Crear el array de opciones para el desplegable
-        $options = array();
-
-        foreach ($course_hierarchy as $category) {
-            foreach ($category['courses'] as $course_id => $course_name) {
-                $options[$course_id] = $category['name'] . ' - ' . $course_name;
-            }
-        }
-
-        $settings->add(new admin_setting_configselect(
-            'mod_exportgrades/courseid',
-            get_string('selectcourse', 'mod_exportgrades'),
-            '',
-            0,
-            $options
-        ));
-
-        
-        // Obtener las opciones del menú desplegable de grupos
-        $group_options = get_all_groups_menu();
-
-        // Agregar la configuración select para el grupo
-        $settings->add(new admin_setting_configselect(
-            'mod_exportgrades/group',
-            get_string('group', 'mod_exportgrades'),
-            get_string('group_desc', 'mod_exportgrades'),
-            '',
-            $group_options
-        ));
-
-        $settings->add($group_select);//agregado despues 16:08
-
-
-    //DESPLEGABLE DE USUARIOS SEGUN CURSO Y GRUPO SELECCIONADO
-
-
-    // Agregar la configuración select para el curso y grupo
-    $settings->add(new admin_setting_configselect(
-        'mod_exportgrades/courseid',
-        get_string('selectcourse', 'mod_exportgrades'),
-        '',
-        0,
-        $options
-    ));
-
-    $settings->add(new admin_setting_configselect(
-        'mod_exportgrades/group',
-        get_string('group', 'mod_exportgrades'),
-        get_string('group_desc', 'mod_exportgrades'),
-        '',
-        $group_options
-    ));
-    */
  
     // Agregar la configuración de página a la administración de Moodle
     $ADMIN->add('modsettings', $settings);
