@@ -1,9 +1,9 @@
 <?php
-
+require_once(__DIR__ . '/vendor/autoload.php');
 defined('MOODLE_INTERNAL') || die();
 define('CLIENT_SECRET_PATH', __DIR__ . '/config/client_secret.json');
 
-require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php');
+//require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php');
 
 
 function exportgrades_supports($feature) {
@@ -173,7 +173,7 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
     if (file_exists($client_secret_path)) {
         // Configurar el cliente con el archivo client_secret.json
         $client->setAuthConfig($client_secret_path);
-        //return $client;
+      
     } else {
         throw new \Exception("Error: archivo client_secret.json no encontrado en $client_secret_path");
     }
@@ -216,11 +216,6 @@ if (file_exists($tokenPath)) {
         }
         file_put_contents($tokenPath, json_encode($client->getAccessToken()));
     }
-     
-
-
-
-
  
      // Verifica que el objeto $course contiene el campo fullname
     if (isset($course->fullname)) {
@@ -431,33 +426,6 @@ if (file_exists($tokenPath)) {
 }
 
 
-//obtener jerarquia de cursos
-/*
-function get_course_hierarchy() {
-    global $DB;
-
-    // Obtener todas las categorías (carreras)
-    $categories = $DB->get_records('course_categories');
-    $courses = $DB->get_records('course', array('visible' => 1)); // Obtener todos los cursos visibles
-
-    $hierarchy = array();
-
-    foreach ($categories as $category) {
-        $hierarchy[$category->id] = array(
-            'name' => $category->name,
-            'courses' => array()
-        );
-    }
-
-    foreach ($courses as $course) {
-        if (isset($hierarchy[$course->category])) {
-            $hierarchy[$course->category]['courses'][$course->id] = $course->fullname;
-        }
-    }
-
-    return $hierarchy;
-}
-*/
 
 //GRUPOSSS
 
@@ -476,73 +444,6 @@ function get_all_groups_menu() {
     return $group_options;
 }
 
-
-
-//ALUMNOS SEGUN MATERIA Y GRUPO ELEGIDO
-/*
-function get_users_by_course_and_group($courseid, $groupid) {
-    global $DB;
-
-    // Consulta para obtener los usuarios del curso y grupo especificados
-    $sql_alumnos = "SELECT u.id, u.username, u.firstname, u.lastname
-            FROM {user} u
-            INNER JOIN {user_enrolments} ue ON u.id = ue.userid
-            INNER JOIN {enrol} e ON ue.enrolid = e.id
-            WHERE ue.status = 0
-            AND e.courseid = :courseid
-            AND ue.groupid = :groupid
-            ORDER BY u.lastname, u.firstname";
-
-$params = [
-    'status' => ENROL_USER_ACTIVE,
-    'courseid' => $courseid,
-    'groupid' => $groupid,
-];
-
-    return $DB->get_records_sql($sql_alumnos, $params);
-}
-*/
-
-/*
-function ajax_get_users_by_course_and_group() {
-    global $DB;
-
-    // Obtener los parámetros de la solicitud AJAX
-    $courseid = required_param('courseid', PARAM_INT);
-    $groupid = required_param('groupid', PARAM_INT);
-
-    // Consulta para obtener los usuarios del curso y grupo especificados
-    $sql = "SELECT u.id, CONCAT(u.firstname, ' ', u.lastname) AS fullname
-            FROM {user} u
-            INNER JOIN {groups_members} gm ON gm.userid = u.id
-            INNER JOIN {groups} g ON g.id = gm.groupid
-            WHERE gm.groupid = :groupid
-            AND u.id IN (
-                SELECT gm.userid
-                FROM {groups_members} gm
-                INNER JOIN {groups} g ON g.id = gm.groupid
-                WHERE g.id = :groupid
-            )
-            ORDER BY u.lastname, u.firstname";
-
-    $params = [
-        'groupid' => $groupid,
-    ];
-
-    $users = $DB->get_records_sql_menu($sql, $params);
-
-    // Construir las opciones para el desplegable de usuarios
-    $user_options = [];
-    foreach ($users as $userid => $fullname) {
-        $user_options[$userid] = format_string($fullname);
-    }
-
-    // Devolver las opciones como HTML para el desplegable de usuarios
-    echo html_writer::select($user_options, 'user', '', ['' => get_string('all')]);
-
-    exit;
-}
-*/
 function get_all_users_menu($courseid) {
     global $DB;
 

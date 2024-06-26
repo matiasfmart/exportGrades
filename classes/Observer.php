@@ -4,9 +4,10 @@ namespace mod_exportgrades;
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\task\manager; // Asegúrate de importar el namespace correcto
+
 class Observer
 {
-
     /**
      * Función que se ejecuta cuando se guardan las configuraciones.
      *
@@ -25,9 +26,6 @@ class Observer
             // Ejemplo de cómo acceder a la hora configurada
             $hour_setting = $exportgrades_settings->hour;
 
-            // Eliminar todas las instancias existentes de la tarea específica
-            $DB->delete_records('task_scheduled', array('classname' => 'mod_exportgrades\task\grade_export_task'));
-
             // Definir la configuración por defecto de la tarea según la frecuencia
             switch ($export_frequency) {
                 case 'daily':
@@ -36,7 +34,7 @@ class Observer
                         'blocking' => 0,
                         'minute' => '*',
                         'hour' => $hour_setting,
-                        'day' => '*/1',
+                        'day' => '*',
                         'month' => '*',
                         'dayofweek' => '*',
                         'disabled' => 0
@@ -48,9 +46,9 @@ class Observer
                         'blocking' => 0,
                         'minute' => '*',
                         'hour' => $hour_setting,
-                        'day' => '*/7',
+                        'day' => '*',
                         'month' => '*',
-                        'dayofweek' => '*',
+                        'dayofweek' => '0', // 0 representa el domingo
                         'disabled' => 0
                     );
                     break;
@@ -60,7 +58,7 @@ class Observer
                         'blocking' => 0,
                         'minute' => '*',
                         'hour' => $hour_setting,
-                        'day' => '*/31',
+                        'day' => '1',
                         'month' => '*',
                         'dayofweek' => '*',
                         'disabled' => 0
@@ -68,9 +66,22 @@ class Observer
                     break;
             }
 
-            // Insertar la nueva configuración de la tarea en la base de datos
-            $DB->insert_record('task_scheduled', (object)$default_task);
+            // Buscar la tarea existente en la base de datos utilizando LIKE
+            $existing_tasks = $DB->get_records_sql("SELECT * FROM {task_scheduled} WHERE classname LIKE ?", array('%grade_export_task%'));
+
+            if ($existing_tasks) {
+                // Si existe una tarea, actualizarla
+                foreach ($existing_tasks as $task) {
+                    $task->hour = $default_task['hour'];
+                    $task->day = $default_task['day'];
+                    $task->dayofweek = $default_task['dayofweek'];
+                    $task->disabled = $default_task['disabled'];
+                    $DB->update_record('task_scheduled', $task);
+                }
+            } else {
+                // Crear una nueva tarea si no existe
+                $DB->insert_record('task_scheduled', (object)$default_task);
+            }
         }
     }
-
 }
