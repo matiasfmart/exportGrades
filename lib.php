@@ -491,7 +491,7 @@ $fileMetadata = new Google_Service_Drive_DriveFile(
     )
 );
 
-$content = file_get_contents($filePath);//$newFilePath
+$content = file_get_contents($filePath);
 
     $file = $service->files->create(
         $fileMetadata,
@@ -552,6 +552,7 @@ $content = file_get_contents($filePath);//$newFilePath
     }
 
     // Buscar y eliminar archivos existentes del curso en la carpeta del año actual
+    /*
     $response = $service->files->listFiles(
         array(
             'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false and name contains '$course->fullname'",
@@ -564,7 +565,33 @@ $content = file_get_contents($filePath);//$newFilePath
         $fileId = $file->id;
         $service->files->delete($fileId);
         printf("Archivo del curso eliminado en la carpeta del año actual: %s\n", $file->name);
+    }*/
+    $courseId = $course->id; // ID del curso actual
+
+// Patron para buscar archivos del curso actual
+$pattern = "grades_course_$courseId";
+
+// Llamar a la API de Google Drive para listar archivos
+$response = $service->files->listFiles(array(
+    'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false and name contains '$pattern'",
+    'spaces' => 'drive',
+    'fields' => 'files(id, name, parents)',
+));
+
+// Iterar sobre los archivos encontrados y eliminar solo los del curso actual
+foreach ($response->files as $file) {
+    // Obtener el ID y el nombre del archivo
+    $fileId = $file->id;
+    $fileName = $file->name;
+
+    // Verificar si el nombre del archivo contiene el patrón del curso actual
+    if (strpos($fileName, $pattern) !== false) {
+        // Eliminar el archivo
+        $service->files->delete($fileId);
+        printf("Archivo del curso eliminado en la carpeta del año actual: %s\n", $fileName);
     }
+}
+
 
     // Subir el nuevo archivo a la carpeta del año actual
     $fileMetadata = new Google_Service_Drive_DriveFile(
