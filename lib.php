@@ -1,12 +1,12 @@
 <?php
-require_once(__DIR__ . '/vendor/autoload.php');
+require_once (__DIR__ . '/vendor/autoload.php');
 defined('MOODLE_INTERNAL') || die();
 define('CLIENT_SECRET_PATH', __DIR__ . '/config/client_secret.json');
 
-//require_once($CFG->dirroot . '/mod/exportgrades/vendor/autoload.php');
 
 
-function exportgrades_supports($feature) {
+function exportgrades_supports($feature)
+{
     switch ($feature) {
         case FEATURE_MOD_INTRO:
             return true;
@@ -15,7 +15,8 @@ function exportgrades_supports($feature) {
     }
 }
 
-function exportgrades_add_instance($moduleinstance, $mform = null) {
+function exportgrades_add_instance($moduleinstance, $mform = null)
+{
     global $DB;
 
     $moduleinstance->timecreated = time();
@@ -25,7 +26,8 @@ function exportgrades_add_instance($moduleinstance, $mform = null) {
     return $id;
 }
 
-function exportgrades_update_instance($moduleinstance, $mform = null) {
+function exportgrades_update_instance($moduleinstance, $mform = null)
+{
     global $DB;
 
     $moduleinstance->timemodified = time();
@@ -34,7 +36,8 @@ function exportgrades_update_instance($moduleinstance, $mform = null) {
     return $DB->update_record('exportgrades', $moduleinstance);
 }
 
-function exportgrades_delete_instance($id) {
+function exportgrades_delete_instance($id)
+{
     global $DB;
 
     $exists = $DB->get_record('exportgrades', array('id' => $id));
@@ -47,7 +50,8 @@ function exportgrades_delete_instance($id) {
     return true;
 }
 
-function obtener_notas_curso($courseid, $selected_users = null) {
+function obtener_notas_curso($courseid, $selected_users = null)
+{
     global $DB;
 
     // Construcción de la consulta SQL
@@ -138,9 +142,14 @@ function obtener_notas_curso($courseid, $selected_users = null) {
             mdl_groups_members gm ON gm.userid = u.id
         LEFT JOIN 
             mdl_groups g ON g.id = gm.groupid
+        LEFT JOIN 
+             {role_assignments} ra ON ra.userid = u.id
+         LEFT JOIN {context} ctx ON ctx.id = ra.contextid AND ctx.contextlevel = 50
         
         WHERE 
-            u.deleted = 0";
+            u.deleted = 0 
+            and c.id = :courseid 
+            AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')";
 
     // Si se pasaron usuarios seleccionados, añadir filtro por esos usuarios
     if (!empty($selected_users)) {
@@ -157,7 +166,8 @@ function obtener_notas_curso($courseid, $selected_users = null) {
 }
 
 
-function export_selected_grades_to_csv($courseid, $selected_users = null) {
+function export_selected_grades_to_csv($courseid, $selected_users = null)
+{
     global $DB;
 
     $grades = obtener_notas_curso($courseid, $selected_users);
@@ -178,48 +188,69 @@ function export_selected_grades_to_csv($courseid, $selected_users = null) {
         return false;
     }
 
-    $headers = ['userid', 'apellidos', 'nombre', 'nombre de usuario', 'institución', 'departamento', 'sede', 'carrera', 'class', 
-    'groupid', 'grupo', 'asistencia', 'carpeta Final del Proyecto (Documentación)', 'carpeta Final del Proyecto (Documentación) - Recuperatorio',
-    'carpeta del Programador', 'carpeta del Proyecto', 'conformación de los Grupos y Elección de 2 posibles Proyectos', 'entrega de Aplicativo (Entrega)', 
-    'entrega de Aplicativo (Recuperatorio)', 'nota Final 1°Llamado Diciembre', 'nota Final 1°Llamado Febrero', 'nota Final 2°Llamado Diciembre', 'nota Final 2°Llamado Febrero',
-    'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)', 'nota Final Llamado Julio', 'presentacion Proyecto Belgrano'];
- 
-        fputcsv($handle, $headers);
-
-         // $current_alumno_id = null;
-         // $current_curso_id = null;
-
-  foreach ($grades as $grade) {
-    $data = [
-        $grade->{'userid'},
-        $grade->{'apellidos'},
-        $grade->{'nombre'},
-        $grade->{'nombre de usuario'},
-        $grade->{'institución'},
-        $grade->{'departamento'},
-        $grade->{'sede'},
-        $grade->{'carrera'},
-        $grade->{'class'},
-        $grade->{'groupid'},
-        $grade->{'grupo'},
-        $grade->{'asistencia'},
-        isset($grade->{'carpeta Final del Proyecto (Documentación)'}) ? $grade->{'carpeta Final del Proyecto (Documentación)'} : '-',
-        isset($grade->{'carpeta Final del Proyecto (Documentación) - Recuperatorio'}) ? $grade->{'carpeta Final del Proyecto (Documentación) - Recuperatorio'} : '-',
-        isset($grade->{'carpeta del Programador'}) ? $grade->{'carpeta del Programador'} : '-',
-        isset($grade->{'carpeta del Proyecto'}) ? $grade->{'carpeta del Proyecto'} : '-',
-        isset($grade->{'conformación de los Grupos y Elección de 2 posibles Proyectos'}) ? $grade->{'conformación de los Grupos y Elección de 2 posibles Proyectos'} : '-',
-        isset($grade->{'entrega de Aplicativo (Entrega)'}) ? $grade->{'entrega de Aplicativo (Entrega)'} : '-',
-        isset($grade->{'entrega de Aplicativo (Recuperatorio)'}) ? $grade->{'entrega de Aplicativo (Recuperatorio)'} : '-',
-        isset($grade->{'nota Final 1°Llamado Diciembre'}) ? $grade->{'nota Final 1°Llamado Diciembre'} : '-',
-        isset($grade->{'nota Final 1°Llamado Febrero'}) ? $grade->{'nota Final 1°Llamado Febrero'} : '-',
-        isset($grade->{'nota Final 2°Llamado Diciembre'}) ? $grade->{'nota Final 2°Llamado Diciembre'} : '-',
-        isset($grade->{'nota Final 2°Llamado Febrero'}) ? $grade->{'nota Final 2°Llamado Febrero'} : '-',
-        isset($grade->{'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)'}) ? $grade->{'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)'} : '-',
-        isset($grade->{'nota Final Llamado Julio'}) ? $grade->{'nota Final Llamado Julio'} : '-',
-        isset($grade->{'presentacion Proyecto Belgrano'}) ? $grade->{'presentacion Proyecto Belgrano'} : '-'
+    $headers = [
+        'userid',
+        'apellidos',
+        'nombre',
+        'nombre de usuario',
+        'institucion',
+        'departamento',
+        'sede',
+        'carrera',
+        'class',
+        'groupid',
+        'grupo',
+        'asistencia',
+        'carpeta Final del Proyecto (Documentación)',
+        'carpeta Final del Proyecto (Documentación) - Recuperatorio',
+        'carpeta del Programador',
+        'carpeta del Proyecto',
+        'conformación de los Grupos y Elección de 2 posibles Proyectos',
+        'entrega de Aplicativo (Entrega)',
+        'entrega de Aplicativo (Recuperatorio)',
+        'nota Final 1°Llamado Diciembre',
+        'nota Final 1°Llamado Febrero',
+        'nota Final 2°Llamado Diciembre',
+        'nota Final 2°Llamado Febrero',
+        'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)',
+        'nota Final Llamado Julio',
+        'presentacion Proyecto Belgrano'
     ];
-    fputcsv($handle, $data);
-}
+
+    fputcsv($handle, $headers);
+
+
+    foreach ($grades as $grade) {
+        $data = [
+            $grade->{'userid'},
+            $grade->{'apellidos'},
+            $grade->{'nombre'},
+            $grade->{'nombre de usuario'},
+            $grade->{'institucion'},
+            $grade->{'departamento'},
+            $grade->{'sede'},
+            $grade->{'carrera'},
+            $grade->{'class'},
+            $grade->{'groupid'},
+            $grade->{'grupo'},
+            $grade->{'asistencia'},
+            isset($grade->{'carpeta Final del Proyecto (Documentación)'}) ? $grade->{'carpeta Final del Proyecto (Documentación)'} : '-',
+            isset($grade->{'carpeta Final del Proyecto (Documentación) - Recuperatorio'}) ? $grade->{'carpeta Final del Proyecto (Documentación) - Recuperatorio'} : '-',
+            isset($grade->{'carpeta del Programador'}) ? $grade->{'carpeta del Programador'} : '-',
+            isset($grade->{'carpeta del Proyecto'}) ? $grade->{'carpeta del Proyecto'} : '-',
+            isset($grade->{'conformación de los Grupos y Elección de 2 posibles Proyectos'}) ? $grade->{'conformación de los Grupos y Elección de 2 posibles Proyectos'} : '-',
+            isset($grade->{'entrega de Aplicativo (Entrega)'}) ? $grade->{'entrega de Aplicativo (Entrega)'} : '-',
+            isset($grade->{'entrega de Aplicativo (Recuperatorio)'}) ? $grade->{'entrega de Aplicativo (Recuperatorio)'} : '-',
+            isset($grade->{'nota Final 1°Llamado Diciembre'}) ? $grade->{'nota Final 1°Llamado Diciembre'} : '-',
+            isset($grade->{'nota Final 1°Llamado Febrero'}) ? $grade->{'nota Final 1°Llamado Febrero'} : '-',
+            isset($grade->{'nota Final 2°Llamado Diciembre'}) ? $grade->{'nota Final 2°Llamado Diciembre'} : '-',
+            isset($grade->{'nota Final 2°Llamado Febrero'}) ? $grade->{'nota Final 2°Llamado Febrero'} : '-',
+            isset($grade->{'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)'}) ? $grade->{'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)'} : '-',
+            isset($grade->{'nota Final Llamado Julio'}) ? $grade->{'nota Final Llamado Julio'} : '-',
+            isset($grade->{'presentacion Proyecto Belgrano'}) ? $grade->{'presentacion Proyecto Belgrano'} : '-'
+        ];
+        fputcsv($handle, $data);
+    }
 
 
     fclose($handle);
@@ -230,7 +261,8 @@ function export_selected_grades_to_csv($courseid, $selected_users = null) {
 
 
 // Función para obtener la jerarquía completa del curso
-function getCourseHierarchyForDrive($courseid) {
+function getCourseHierarchyForDrive($courseid)
+{
     global $DB;
 
     // Obtener el curso
@@ -256,33 +288,35 @@ function getCourseHierarchyForDrive($courseid) {
 
 //subida al drive
 
-function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_credentials, $drive_folder_id,$course) {
+function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_credentials, $drive_folder_id, $course)
+{
     $client = new Google_Client();
     // Utilizar la constante definida para la ruta del client_secret.json
     $client_secret_path = CLIENT_SECRET_PATH;
-      // Verificar si el archivo client_secret.json existe
+    // Verificar si el archivo client_secret.json existe
     if (file_exists($client_secret_path)) {
         // Configurar el cliente con el archivo client_secret.json
         $client->setAuthConfig($client_secret_path);
-      
+
     } else {
         throw new \Exception("Error: archivo client_secret.json no encontrado en $client_secret_path");
     }
-  
- 
+    printf("filePath %s\n", $filePath);
+    printf("fileName %s\n", $fileName);
+
     $client->addScope(Google_Service_Drive::DRIVE_FILE);
     $client->setAccessType('offline');
     $client->setPrompt('select_account consent');
-     
+
     if (!file_exists($filePath) || !is_readable($filePath)) {
         throw new \Exception("El archivo no existe o no se puede leer: $filePath");
     }
 
     // Path to the token file
-    
+
     $tokenPath = 'config/token.json';
 
-if (file_exists($tokenPath)) {
+    if (file_exists($tokenPath)) {
         $accessToken = json_decode(file_get_contents($tokenPath), true);
         if (json_last_error() === JSON_ERROR_NONE && isset($accessToken['access_token']) && isset($accessToken['refresh_token'])) {
             $client->setAccessToken($accessToken);
@@ -307,8 +341,8 @@ if (file_exists($tokenPath)) {
         }
         file_put_contents($tokenPath, json_encode($client->getAccessToken()));
     }
- 
-     // Verifica que el objeto $course contiene el campo fullname
+
+    // Verifica que el objeto $course contiene el campo fullname
     if (isset($course->fullname)) {
         printf("Nombre del curso: %s\n", $course->fullname);
     } else {
@@ -320,8 +354,8 @@ if (file_exists($tokenPath)) {
     printf("Id del curso: %s\n", $courseid);
     $courseHierarchy = getCourseHierarchyForDrive($course->id);
     if (isset($course->id)) {
-    printf("Jerarquia del curso: %s\n", $courseHierarchy);
-    }else {
+        printf("Jerarquia del curso: %s\n", $courseHierarchy);
+    } else {
         throw new \Exception("El objeto \$courseHierarchy no tiene contenido");
     }
 
@@ -344,7 +378,7 @@ if (file_exists($tokenPath)) {
         }
     }
 
-     // Verifica nuevamente el formato del token
+    // Verifica nuevamente el formato del token
     $tokenData = json_decode(file_get_contents($tokenPath), true);
     if (json_last_error() !== JSON_ERROR_NONE || !isset($tokenData['access_token'])) {
         throw new Exception('Formato de token inválido');
@@ -358,11 +392,13 @@ if (file_exists($tokenPath)) {
 
     foreach ($folders as $folderName) {
         // Buscar si la carpeta ya existe
-        $response = $service->files->listFiles(array(
-            'q' => "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and '$currentFolderId' in parents and trashed = false",
-            'spaces' => 'drive',
-            'fields' => 'files(id, name)',
-        ));
+        $response = $service->files->listFiles(
+            array(
+                'q' => "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and '$currentFolderId' in parents and trashed = false",
+                'spaces' => 'drive',
+                'fields' => 'files(id, name)',
+            )
+        );
 
         if (count($response->files) > 0) {
             // La carpeta ya existe, obtener su ID
@@ -370,15 +406,20 @@ if (file_exists($tokenPath)) {
             printf("La carpeta ya existe con ID: %s\n", $currentFolderId);
         } else {
             // Crear la carpeta si no existe
-            $folderMetadata = new Google_Service_Drive_DriveFile(array(
-                'name' => $folderName,
-                'mimeType' => 'application/vnd.google-apps.folder',
-                'parents' => array($currentFolderId)
-            ));
+            $folderMetadata = new Google_Service_Drive_DriveFile(
+                array(
+                    'name' => $folderName,
+                    'mimeType' => 'application/vnd.google-apps.folder',
+                    'parents' => array($currentFolderId)
+                )
+            );
 
-            $folder = $service->files->create($folderMetadata, array(
-                'fields' => 'id'
-            ));
+            $folder = $service->files->create(
+                $folderMetadata,
+                array(
+                    'fields' => 'id'
+                )
+            );
 
             $currentFolderId = $folder->id;
             printf("Nueva carpeta creada con ID: %s\n", $currentFolderId);
@@ -387,68 +428,84 @@ if (file_exists($tokenPath)) {
 
     // Crear la carpeta "Historico" dentro de la última carpeta del curso si no existe
     $historicFolderName = "Historico";
-    $response = $service->files->listFiles(array(
-        'q' => "name = '$historicFolderName' and mimeType = 'application/vnd.google-apps.folder' and '$currentFolderId' in parents and trashed = false",
-        'spaces' => 'drive',
-        'fields' => 'files(id, name)',
-    ));
+    $response = $service->files->listFiles(
+        array(
+            'q' => "name = '$historicFolderName' and mimeType = 'application/vnd.google-apps.folder' and '$currentFolderId' in parents and trashed = false",
+            'spaces' => 'drive',
+            'fields' => 'files(id, name)',
+        )
+    );
 
     $historicFolderId = null;
     if (count($response->files) > 0) {
         $historicFolderId = $response->files[0]->id;
         printf("La carpeta 'Historico' ya existe con ID: %s\n", $historicFolderId);
     } else {
-        $folderMetadata = new Google_Service_Drive_DriveFile(array(
-            'name' => $historicFolderName,
-            'mimeType' => 'application/vnd.google-apps.folder',
-            'parents' => array($currentFolderId)
-        ));
+        $folderMetadata = new Google_Service_Drive_DriveFile(
+            array(
+                'name' => $historicFolderName,
+                'mimeType' => 'application/vnd.google-apps.folder',
+                'parents' => array($currentFolderId)
+            )
+        );
 
-        $folder = $service->files->create($folderMetadata, array(
-            'fields' => 'id'
-        ));
+        $folder = $service->files->create(
+            $folderMetadata,
+            array(
+                'fields' => 'id'
+            )
+        );
 
         $historicFolderId = $folder->id;
         printf("Nueva carpeta 'Historico' creada con ID: %s\n", $historicFolderId);
     }
 
     // Mover todos los archivos existentes a la carpeta "Historico"
-    $response = $service->files->listFiles(array(
-        'q' => "'$currentFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false",
-        'spaces' => 'drive',
-        'fields' => 'files(id, name, parents)',
-    ));
+    $response = $service->files->listFiles(
+        array(
+            'q' => "'$currentFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false",
+            'spaces' => 'drive',
+            'fields' => 'files(id, name, parents)',
+        )
+    );
 
     foreach ($response->files as $file) {
         $fileId = $file->id;
-        $service->files->update($fileId, new Google_Service_Drive_DriveFile(),array(
-            'addParents' => $historicFolderId,
-            'removeParents' => $currentFolderId,
-            'fields' => 'id, parents'
-        ));
+        $service->files->update(
+            $fileId,
+            new Google_Service_Drive_DriveFile(),
+            array(
+                'addParents' => $historicFolderId,
+                'removeParents' => $currentFolderId,
+                'fields' => 'id, parents'
+            )
+        );
         printf("Archivo movido a 'Historico': %s\n", $file->name);
     }
 
 
-
-    // Subir el archivo a la carpeta final
-    $fileMetadata = new Google_Service_Drive_DriveFile(array(
+$fileMetadata = new Google_Service_Drive_DriveFile(
+    array(
         'name' => $fileName,
         'parents' => array($currentFolderId)
-    ));
+    )
+);
 
-    $content = file_get_contents($filePath);
+$content = file_get_contents($filePath);//$newFilePath
 
-    $file = $service->files->create($fileMetadata, array(
-        'data' => $content,
-        'mimeType' => 'text/csv',
-        'uploadType' => 'multipart',
-        'fields' => 'id'
-    ));
+    $file = $service->files->create(
+        $fileMetadata,
+        array(
+            'data' => $content,
+            'mimeType' => 'text/csv',
+            'uploadType' => 'multipart',
+            'fields' => 'id'
+        )
+    );
 
     printf("File ID: %s\n", $file->id);
 
-// --- Añadir el archivo a la carpeta del año actual ---
+    // --- Añadir el archivo a la carpeta del año actual ---
 
     // Obtener el año actual
     $currentYear = date("Y");
@@ -456,16 +513,18 @@ if (file_exists($tokenPath)) {
     // Buscar la carpeta del año actual
     $yearFolderId = null;
 
-    $response = $service->files->listFiles(array(
-        'q' => "name contains '$currentYear' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-        'spaces' => 'drive',
-        'fields' => 'files(id, name)',
-    ));
+    $response = $service->files->listFiles(
+        array(
+            'q' => "name contains '$currentYear' and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+            'spaces' => 'drive',
+            'fields' => 'files(id, name)',
+        )
+    );
 
     if (count($response->files) > 0) {
         // La carpeta del año actual ya existe
         foreach ($response->files as $folder) {
-            if (strpos($folder->name, (string)$currentYear) !== false) {
+            if (strpos($folder->name, (string) $currentYear) !== false) {
                 $yearFolderId = $folder->id;
                 break;
             }
@@ -473,26 +532,33 @@ if (file_exists($tokenPath)) {
         printf("Carpeta del año actual encontrada con ID: %s\n", $yearFolderId);
     } else {
         // Crear la carpeta del año actual si no existe
-        $folderMetadata = new Google_Service_Drive_DriveFile(array(
-            'name' => $currentYear, // Nombre ejemplo para nueva carpeta
-            'mimeType' => 'application/vnd.google-apps.folder',
-            'parents' => array($drive_folder_id) // Especificar que la carpeta del año actual sea un subdirectorio de la carpeta raíz
-        ));
+        $folderMetadata = new Google_Service_Drive_DriveFile(
+            array(
+                'name' => $currentYear, // Nombre ejemplo para nueva carpeta
+                'mimeType' => 'application/vnd.google-apps.folder',
+                'parents' => array($drive_folder_id) // Especificar que la carpeta del año actual sea un subdirectorio de la carpeta raíz
+            )
+        );
 
-        $folder = $service->files->create($folderMetadata, array(
-            'fields' => 'id'
-        ));
+        $folder = $service->files->create(
+            $folderMetadata,
+            array(
+                'fields' => 'id'
+            )
+        );
 
         $yearFolderId = $folder->id;
         printf("Nueva carpeta del año actual creada con ID: %s\n", $yearFolderId);
     }
 
     // Buscar y eliminar archivos existentes del curso en la carpeta del año actual
-    $response = $service->files->listFiles(array(
-        'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false and name contains '$course->fullname'",
-        'spaces' => 'drive',
-        'fields' => 'files(id, name, parents)',
-    ));
+    $response = $service->files->listFiles(
+        array(
+            'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false and name contains '$course->fullname'",
+            'spaces' => 'drive',
+            'fields' => 'files(id, name, parents)',
+        )
+    );
 
     foreach ($response->files as $file) {
         $fileId = $file->id;
@@ -501,26 +567,30 @@ if (file_exists($tokenPath)) {
     }
 
     // Subir el nuevo archivo a la carpeta del año actual
-    $fileMetadata = new Google_Service_Drive_DriveFile(array(
-        'name' => $fileName,
-        'parents' => array($yearFolderId)
-    ));
+    $fileMetadata = new Google_Service_Drive_DriveFile(
+        array(
+            'name' => $fileName,
+            'parents' => array($yearFolderId)
+        )
+    );
 
-    $file = $service->files->create($fileMetadata, array(
-        'data' => $content,
-        'mimeType' => 'text/csv',
-        'uploadType' => 'multipart',
-        'fields' => 'id'
-    ));
+    $file = $service->files->create(
+        $fileMetadata,
+        array(
+            'data' => $content,
+            'mimeType' => 'text/csv',
+            'uploadType' => 'multipart',
+            'fields' => 'id'
+        )
+    );
 
     printf("Nuevo archivo subido a la carpeta del año actual. File ID: %s\n", $file->id);
 }
 
-
-
 //GRUPOSSS
 
-function get_all_groups_menu() {
+function get_all_groups_menu()
+{
     global $DB;
 
     // Obtener todos los registros de grupos
@@ -534,7 +604,7 @@ function get_all_groups_menu() {
 
     return $group_options;
 }
-
+/*
 function get_all_users_menu($courseid) {
     global $DB;
 
@@ -548,9 +618,10 @@ function get_all_users_menu($courseid) {
     }
 
     return $user_options;
-}
+}*/
 
-function get_users_by_group($courseid, $groupid) {
+function get_users_by_group($courseid, $groupid)
+{
     global $DB;
 
     if ($groupid > 0) {
@@ -593,4 +664,3 @@ function mod_exportgrades_extend_navigation(global_navigation $root)
     $node->showinflatnavigation = true;
     $root->add_node($node);
 }
-
