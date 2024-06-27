@@ -21,11 +21,24 @@ class Observer
 
             // Ejemplo de cómo acceder a la hora configurada
             $hour_setting = $exportgrades_settings->hour;
+            $minute = (string)get_config('mod_exportgrades', 'minutes');
             $weekly_day = get_config('mod_exportgrades', 'weekly_day');
             $monthly_day = get_config('mod_exportgrades', 'monthly_day');
 
             // Definir la configuración por defecto de la tarea según la frecuencia
             switch ($export_frequency) {
+                case 'minutes':
+                    $default_task = array(
+                       'classname' => 'mod_exportgrades\task\grade_export_task',
+                        'blocking' => 0,
+                        'minute' => '*/' . $minute,
+                        'hour' => '*',
+                        'day' => '*',
+                        'month' => '*',
+                        'dayofweek' => '*',
+                        'disabled' => 0 
+                    );
+                    break;
                 case 'daily':
                     $default_task = array(
                         'classname' => 'mod_exportgrades\task\grade_export_task',
@@ -70,10 +83,11 @@ class Observer
             if ($existing_tasks) {
                 // Si existe una tarea, actualizarla
                 foreach ($existing_tasks as $task) {
+                    $task->minute = $default_task['minute'];
                     $task->hour = $default_task['hour'];
                     $task->day = $default_task['day'];
-                    $task->dayofweek = $default_task['dayofweek'];
                     $task->month = $default_task['month'];
+                    $task->dayofweek = $default_task['dayofweek'];
                     $task->disabled = $default_task['disabled'];
                    
                     $DB->update_record('task_scheduled', $task);
