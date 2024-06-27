@@ -96,47 +96,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
      $selected_users = optional_param_array('selected_users', [], PARAM_INT);
      $export_directory = optional_param('export_directory', '', PARAM_TEXT);
 
-   // Llama a la función con los usuarios seleccionados
     set_config('drive_folder_id', $drive_folder_id, 'mod_exportgrades');
-  
-
-    // Generar y redirigir al script de descarga
-    $file_info = export_selected_grades_to_csv($course->id, $selected_users);
-    $filepath = $file_info['temp_file'];
-    $filename = $file_info['filename'];
-
-        // Validar si export_directory está vacío
-    if (empty($export_directory)) {
-        // Redirigir directamente a la carga a Google Drive
-        uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id, $course);
-        redirect(new moodle_url('/mod/exportgrades/view.php', array('id' => $cm->id)));
-        exit();
-    }
-
-        // Subir el archivo CSV a Google Drive si está configurado
-    if (!empty($drive_folder_id)) {
-        uploadToGoogleDrive($filepath, basename($filepath), $drive_service_account_credentials, $drive_folder_id, $course);
-    }
 
 
-    redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($filepath), 'filename' => $filename)));
-   
-    
+// Llama a la función con los usuarios seleccionados
+$file_info = export_selected_grades_to_csv($course->id, $selected_users);
+$filepath = $file_info['temp_file'];
+$filename = $file_info['filename'];
 
-    ///validar este punto si me lo realiza igual a pesar de tener vacio el path
-    if ($result) {
-        $temp_file = $result['temp_file'];
-        $filename = $result['filename'];
-        // Redirigir al usuario al script de descarga con el nombre del archivo
-        redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => $temp_file, 'filename' => $filename)));
-       //redirect(new moodle_url('/mod/exportgrades/view.php', array('id' => $cm->id, 'file' => urlencode($filepath), 'filename' => $filename)));
+// Renombrar el archivo
+$date = new DateTime();
+$datetime = $date->format('Ymd_His');
+$newFileName = "grades_course_{$course->id}_{$datetime}.csv";
+$newFilePath = dirname($filepath) . "/" . $newFileName;
 
-        exit();
-    } else {
-        echo $OUTPUT->notification(get_string('no_grades_found', 'mod_exportgrades'), 'notifyproblem');
-    }
-    echo $OUTPUT->notification(get_string('changessaved'), 'notifysuccess');
+if (!rename($filepath, $newFilePath)) {
+    die('Error al renombrar el archivo.');
 }
+
+// Validar si export_directory está vacío
+if (empty($export_directory)) {
+    // Redirigir directamente a la carga a Google Drive
+    uploadToGoogleDrive($newFilePath, $newFileName, $drive_service_account_credentials, $drive_folder_id, $course);
+    //redirect(new moodle_url('/mod/exportgrades/download_csv.php',  array('file' => urlencode($newFilePath), 'filename' => $newFileName)));
+    exit();
+}
+
+// Subir el archivo CSV a Google Drive si está configurado
+if (!empty($drive_folder_id)) {
+    // Asegúrate de usar el nuevo nombre de archivo aquí
+    uploadToGoogleDrive($newFilePath, $newFileName, $drive_service_account_credentials, $drive_folder_id, $course);
+}
+
+// Redirigir al usuario al script de descarga con el nombre del archivo
+redirect(new moodle_url('/mod/exportgrades/download_csv.php', array('file' => urlencode($newFilePath), 'filename' => $newFileName)));
+
+}
+
+
 
 // Obtener las opciones de usuario para el desplegable
 $user_options = get_users_by_group($course->id, $selected_groupid);
