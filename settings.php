@@ -11,6 +11,7 @@ if ($hassiteconfig) {
 
         // Configuración de frecuencia
         $frequencyOptions = [
+            'minutes' => get_string("minutes", 'mod_exportgrades'),
             'daily' => get_string('daily', 'mod_exportgrades'),
             'weekly' => get_string('weekly', 'mod_exportgrades'),
             'monthly' => get_string('monthly', 'mod_exportgrades')
@@ -23,19 +24,29 @@ if ($hassiteconfig) {
             $frequencyOptions
         ));
 
-
           // Opciones predefinidas para la hora
         $time_options = array_combine(range(1, 24), range(1, 24));
         // Campo para configurar la hora (select)
         $settings->add(new admin_setting_configselect(
             'mod_exportgrades/hour',
-            get_string('time', 'mod_exportgrades'),
+            get_string('time_hour', 'mod_exportgrades'),
             get_string('selecttime', 'mod_exportgrades'),
             '12', // Valor por defecto
             $time_options // Opciones del select
         ));
 
+        // Opciones para los minutos (0 a 59)
+        $time_options_minute = array_combine(range(0, 59), range(0, 59));
+        // Campo para configurar los minutos (select)
+        $settings->add(new admin_setting_configselect(
+            'mod_exportgrades/minutes',
+            get_string('time_minute', 'mod_exportgrades'),
+            get_string('selectminute', 'mod_exportgrades'),
+            '0', // Valor por defecto
+            $time_options_minute // Opciones del select de minutos
+        ));
 
+    
        // Configuraciones Semanales
         $weekDays = [
             '1' => get_string('monday', 'mod_exportgrades'),

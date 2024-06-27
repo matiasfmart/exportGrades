@@ -20,6 +20,7 @@ $string['grade_export_task'] = 'Export Grades Task Automation';
 
 $string['frequency'] = 'Export Frequency';
 $string['frequency_desc'] = 'Select how often you want to export grades to Google Drive.';
+$string['minutes'] = 'Minutes';
 $string['daily'] = 'Daily';
 $string['weekly'] = 'Weekly';
 $string['monthly'] = 'Monthly';
@@ -44,6 +45,8 @@ $string['users_desc'] = 'Allows you to search for a particular user';
 $string['dayofweek'] = 'Day of the week';
 $string['dayofmonth'] = 'Day of month';
 $string['time'] = 'Time';
+$string['time_minute'] = 'Minutes';
+$string['time_hour'] = 'Hour';
 $string['monday'] = 'Monday';
 $string['tuesday'] = 'Tuesday';
 $string['wednesday'] = 'Wednesday';
