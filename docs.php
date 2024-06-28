@@ -35,7 +35,8 @@ echo $OUTPUT->header();
                 <p class="text-black p-3">
                     Este manual está diseñado para guiar a todos los usuarios que interactúan con nuestro plugin para
                     Moodle. Se
-                    ha estructurado pensando en proporcionar la información más relevante y útil para cada grupo específico
+                    ha estructurado pensando en proporcionar la información más relevante y útil para cada grupo
+                    específico
                     de
                     usuarios, asegurando que puedan maximizar los beneficios y funcionalidades del plugin de manera
                     efectiva.
@@ -115,7 +116,8 @@ echo $OUTPUT->header();
                     configuración y el contacto con soporte en el caso de necesitar ayuda. <br> <br>
 
                     <b> Maximizar la experiencia del Usuario:</b> <br>
-                    Mejorar la experiencia global del usuario al proporcionar una guía completa que permita aprovechar al
+                    Mejorar la experiencia global del usuario al proporcionar una guía completa que permita aprovechar
+                    al
                     máximo las características y beneficios de la plataforma.
                 </p>
             </div>
@@ -123,20 +125,20 @@ echo $OUTPUT->header();
         <div class="row">
             <div class="col-12 mt-4" id="installation">
                 <h3>Guía de instalación del Plugin</h3>
-                <p class="text-black p-3">
-                    <a href="https://github.com/matiasfmart/exportGrades/tree/master">https://github.com/matiasfmart/exportGrades/tree/master</a>
-                </p>
             </div>
             <div class="col-12">
-                <a href='https://postimages.org/' target='_blank' class="p-3">
-                    <img src='https://i.postimg.cc/cCHBNXq0/image2.png' border='0' alt='image2'/>
-                </a>
-            </div>
-            <div class="col-12">
-                <p class="p-3">Descargar el archivo ZIP que se encuentra en este repositorio. <br>
-                    Luego, colocar el archivo ZIP en server/moodle/mod y lo deszipean. <br>
-                    Una vez colocado, ir al moodle para completar la descarga. <br>
+                <p class="text-black ">
+                    <a href="https://drive.google.com/drive/u/0/folders/1c0jUUwTUHfi3m4pfSi0MP2jD2L2JmSAP"
+                       target="_blank">https://drive.google.com/drive/u/0/folders/1c0jUUwTUHfi3m4pfSi0MP2jD2L2JmSAP</a>
                 </p>
+                <ol>
+                    <li>Descargar el archivo ZIP que se encuentra en este link de drive.</li>
+                    <li>Colocar el archivo ZIP dentro de su plataforma moodle en la carpeta /mod.</li>
+                    <li>Descargar el archivo ZIP que se encuentra en este link de drive.</li>
+                    <li>Extraer los archivos.</li>
+                    <li>Volver al Moodle para continuar con la Descarga.</li>
+                    <li>Sehuir los pasos de intalacion, solo hay que darle click al boton de "Continuar".</li>
+                </ol>
             </div>
         </div>
         <div class="row">
@@ -145,14 +147,11 @@ echo $OUTPUT->header();
                 <ol>
                     <li>Ir a nuestro curso</li>
                     <li>Activar el “Edit mode” arriba a la derecha</li>
-                    <a href='https://postimages.org/' target='_blank'><img src='https://i.postimg.cc/Hk54HrNc/image11.png'
-                                                                           border='0' alt='image11'/></a>
+                    <img src='https://i.postimg.cc/Hk54HrNc/image11.png' border='0' alt='image11'/>
                     <li class="mt-2">agregar la actividad a tu curso</li>
-                    <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/qMD228PC/image5.png"
-                                                                           alt="image5"/></a>
+                    <img src="https://i.postimg.cc/qMD228PC/image5.png" alt="image5"/>
                     <li class="mt-2">Ponerle nombre a la actividad</li>
-                    <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/SNH7w6gb/image10.png"
-                                                                           alt="image10"/></a>
+                    <img src="https://i.postimg.cc/SNH7w6gb/image10.png" alt="image10"/>
                 </ol>
             </div>
 
@@ -161,11 +160,9 @@ echo $OUTPUT->header();
                 <ol>
                     <li>Ir a Site administration</li>
                     <li>ir a la sección Plugins</li>
-                    <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/brBHYk8b/image6.png"
-                                                                           alt="image6"/></a>
+                    <img src="https://i.postimg.cc/brBHYk8b/image6.png" alt="image6"/>
                     <li>Hacer click en export-grades-cloud</li>
-                    <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/Hsr9ZZ4t/image9.png"
-                                                                           alt="image9"/></a>
+                    <img src="https://i.postimg.cc/Hsr9ZZ4t/image9.png" alt="image9"/>
 
                 </ol>
             </div>
@@ -176,13 +173,17 @@ echo $OUTPUT->header();
             <h3>Cómo rellenar los campos</h3>
             <?php
             $pasos = [
-                'En “Export Frequency” tienes 3 opciones para seleccionar. “Daily”, “Weekly” y “Monthly”.',
-                'En “Tiempo” se selecciona la hora deseada para realizar la exportación.',
-                'En “Día de la semana” se selecciona únicamente si la frecuencia de exportación es semanal.
-             Se selecciona el día de la semana deseado para la exportación.',
-                'En “Día del mes” se selecciona únicamente si la frecuencia de exportación es mensual.
-             Se selecciona el día del mes deseado para la exportación.',
-                'En “Google Drive Folder ID” va a ir el link del repositorio al cual desear subir las calificaciones.',
+                'En “Export Frequency” tienes 3 opciones para seleccionar. "Minutes", “Daily”, “Weekly” y “Monthly”. <br>
+',
+                'En "Minutos" se selcciona cada cuantos minutos queres que se realizen las exportaciones. <b>EJ: 1 seria cada un minuto.</b>',
+                'En “Tiempo” se selecciona la hora deseada para realizar la exportación.  <b>EJ: 2 seria a las 2:00 AM.</b>',
+                'Si la frecuencia de exportación es semanal, entonces en el campo “Día de la semana” se puede seleccionar el día de la semana deseado para la exportación. <b>EJ: Lunes seria cada Lunes.</b>',
+                'Si la frecuencia de exportación es mensual,el campo “Día del mes” se selecciona el día del mes deseado para la exportación. <b>Ej 30 cada numero 30 del mes.</b>',
+                'En "Directorio Local" se copia el path donde uno desa que se descarguen los csv. en su entrono local. <b>EJ: pathedseado/downloads</b> si se deja vacio no se genera nign csv de manera local.',
+                'En “Google Drive Folder ID” va a ir el link del repositorio al cual desear subir las calificaciones. <br> <img src=\'https://i.postimg.cc/tTCZdR2z/Whats-App-Image-2024-06-27-at-20-47-46-4b390adc.jpg\' border=\'0\' alt=\'Whats-App-Image-2024-06-27-at-20-47-46-4b390adc\'/>',
+                'Para obtener ese id, te dirigis a TU google dirve.',
+                'Te posicionas en el root donde quieras generar todo el path de carpetas.',
+                'Una vez posicionado dentro de la carpeta, En la URI podes selecionar el ID.<br> <img src=\'https://i.postimg.cc/JzMk7QZg/Captura-de-pantalla-1264.png\' border=\'0\' alt=\'Captura-de-pantalla-1264\'/>',
                 'En “Google Drive Service Account Credentials” hay que poner las credenciales que necesitamos para poder mandar las calificaciones al drive.',
                 'En “Local Directory” podemos poner el path en el cual queremos que se descargue el CSV localmente.'
             ];
@@ -192,10 +193,9 @@ echo $OUTPUT->header();
                     <li><?php echo $paso ?></li>
                 <?php } ?>
             </ol>
-            <a href="https://postimages.org/" target="_blank"><img src="https://i.postimg.cc/26xZyvdy/image8.png"
-                                                                   alt="image8"/></a>
+           <img src='https://i.postimg.cc/ZKFWQy2L/Screenshot-2024-06-27-210059.png' border='0' alt='Screenshot-2024-06-27-210059'/>
         </div>
-        <div class="col-12 mt-4" id="check-install">
+        <div class="col-12 mt-5" id="check-install">
             <h3>Cómo saber si el plugin está bien instalado</h3>
             <ol>
                 <li>Ir a Site administration</li>
@@ -216,7 +216,6 @@ echo $OUTPUT->header();
             <h3>Preguntas Frecuentes</h3>
             <?php
             $faqs = [
-                ['q' => '¿El plugin es gratuito?', 'a' => 'Sí, el plugin es completamente gratuito.'],
                 [
                     'q' => '¿Está el plugin disponible en la tienda de Moodle?',
                     'a' => 'Actualmente, el plugin no está disponible en la tienda de Moodle.
@@ -229,9 +228,9 @@ echo $OUTPUT->header();
                     Esto incluye la frecuencia de exportación, así como la configuración de Google Drive y
                      el directorio local.'
                 ],
-                ['q' => '¿Cómo puedo desinstalar el Plugin?', 'a' => 'Borrar la carpeta “exportgrades” en tu Moodle. <br>
-                Luego ir a “Site Administration”, ir a la sección “Plugins”, luego a plugins overview.
-                Buscar el plugin en Activity modules y le das a la opción “Uninstall”.'
+                ['q' => '¿Cómo puedo desinstalar el Plugin?', 'a' => 'ir a “Site Administration”, ir a la sección “Plugins”, luego a plugins overview.
+                Buscar el plugin en Activity modules y le das a la opción “Uninstall”, luego borrar la carpeta “exportgrades” en tu Moodle. <br>
+                Luego'
                 ]
             ];
             $counter = 0;
@@ -267,7 +266,7 @@ echo $OUTPUT->header();
                     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
                         <div class="accordion-body">
                             <div class="accordion-body">Nos puede contactar o enviar su consulta a este mail: <a
-                                    href="mailto:moodlePlugin@gmail.com">moodlePlugin@gmail.com</a></div>
+                                        href="mailto:moodlePlugin@gmail.com">moodlePlugin@gmail.com</a></div>
                         </div>
                     </div>
                 </div>
