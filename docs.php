@@ -38,17 +38,16 @@ echo $OUTPUT->header();
                     ha estructurado pensando en proporcionar la información más relevante y útil para cada grupo
                     específico
                     de
-                    usuarios, asegurando que puedan maximizar los beneficios y funcionalidades del plugin de manera
+                    usuarios, asegurando que puedan maximizar las funcionalidades del plugin de manera
                     efectiva.
                 </p>
             </div>
             <div class="col-12">
                 <ul class="text-black p-3"> Usuarios Finales:
                     <li>Organizaciones y Empresas.</li>
+                    <li>Personas individuales: Personas que sean propietarias de uno o varios cursos.</li>
                 </ul>
-                <ul class="text-black p-3"> Personas individuales:
-                    <li>Personas que sean propietarias de uno o varios cursos.</li>
-                </ul>
+                
             </div>
 
             <div class="col-6 mt-2">
@@ -99,26 +98,24 @@ echo $OUTPUT->header();
 
             <div class="col-12 mt-4" id="intro">
                 <h3>Introducción</h3>
-                <p class="text-black p-3">Contenido de la introducción.</p>
             </div>
             <div class="col-12 mt-4" id="objective">
                 <h3>Objetivo del manual</h3>
-                <p class="text-black p-3">El presente manual ha sido creado con el objetivo de proporcionar una guía
-                    completa y detallada sobre el uso de nuestro plug-in. <br> <br>
+                <p class="text-black p-3">Este manual ha sido creado con el objetivo de proporcionar una guía
+                    completa y detallada sobre el uso de nuestro plugin. <br> <br>
                     Este manual tiene como propósito: <br> <br>
 
                     <b>Orientar en la navegación y funcionamiento:</b> <br>
                     Ofrecer instrucciones claras sobre configuraciones y como poder acceder a las funcionalidades del
-                    plug-in. <br> <br>
+                    plugin. <br> <br>
 
                     <b>Proporcionar Soporte y Asistencia:</b> <br>
-                    Servir como referencia para resolver preguntas frecuentes y brindar información detallada sobre la
-                    configuración y el contacto con soporte en el caso de necesitar ayuda. <br> <br>
+                    Actuar como una fuente de consulta para responder preguntas comunes sobre el plugin
+                    y cómo contactar con el equipo de soporte en caso de necesitar asistencia.<br> <br>
 
-                    <b> Maximizar la experiencia del Usuario:</b> <br>
-                    Mejorar la experiencia global del usuario al proporcionar una guía completa que permita aprovechar
-                    al
-                    máximo las características y beneficios de la plataforma.
+                    <b> Mejorar la experiencia del Usuario:</b> <br>
+                    Mejorar la experiencia del usuario al proporcionar informacion que permita aprovechar
+                    al máximo las características y beneficios del plugin.
                 </p>
             </div>
         </div>
@@ -137,7 +134,7 @@ echo $OUTPUT->header();
                     <li>Descargar el archivo ZIP que se encuentra en este link de drive.</li>
                     <li>Extraer los archivos.</li>
                     <li>Volver al Moodle para continuar con la Descarga.</li>
-                    <li>Sehuir los pasos de intalacion, solo hay que darle click al boton de "Continuar".</li>
+                    <li>Seguir los pasos de instalacion, solo hay que darle click al boton de "Continuar".</li>
                 </ol>
             </div>
         </div>
@@ -159,7 +156,7 @@ echo $OUTPUT->header();
                 <h3>Cómo configurar el Plugin</h3>
                 <ol>
                     <li>Ir a Site administration</li>
-                    <li>ir a la sección Plugins</li>
+                    <li>Ir a la sección Plugins</li>
                     <img src="https://i.postimg.cc/brBHYk8b/image6.png" alt="image6"/>
                     <li>Hacer click en export-grades-cloud</li>
                     <img src="https://i.postimg.cc/Hsr9ZZ4t/image9.png" alt="image9"/>
@@ -175,12 +172,12 @@ echo $OUTPUT->header();
             $pasos = [
                 'En “Export Frequency” tienes 3 opciones para seleccionar. "Minutes", “Daily”, “Weekly” y “Monthly”. <br>
 ',
-                'En "Minutos" se selcciona cada cuantos minutos queres que se realizen las exportaciones. <b>EJ: 1 seria cada un minuto.</b>',
+                'En "Minutos" se selecciona cada cuantos minutos queres que se realicen las exportaciones. <b>EJ: 1 seria cada un minuto.</b>',
                 'En “Tiempo” se selecciona la hora deseada para realizar la exportación.  <b>EJ: 2 seria a las 2:00 AM.</b>',
                 'Si la frecuencia de exportación es semanal, entonces en el campo “Día de la semana” se puede seleccionar el día de la semana deseado para la exportación. <b>EJ: Lunes seria cada Lunes.</b>',
                 'Si la frecuencia de exportación es mensual,el campo “Día del mes” se selecciona el día del mes deseado para la exportación. <b>Ej 30 cada numero 30 del mes.</b>',
-                'En "Directorio Local" se copia el path donde uno desa que se descarguen los csv. en su entrono local. <b>EJ: pathedseado/downloads</b> si se deja vacio no se genera nign csv de manera local.',
-                'En “Google Drive Folder ID” va a ir el link del repositorio al cual desear subir las calificaciones. <br> <img src=\'https://i.postimg.cc/tTCZdR2z/Whats-App-Image-2024-06-27-at-20-47-46-4b390adc.jpg\' border=\'0\' alt=\'Whats-App-Image-2024-06-27-at-20-47-46-4b390adc\'/>',
+                'En "Directorio Local" se copia el path donde uno desea que se descarguen los csv. en su entorno local. <b>EJ: pathedeseado/downloads</b> si se deja vacio no se genera ningun csv de manera local.',
+                'En “Google Drive Folder ID” va a ir el link del repositorio al cual desea subir las calificaciones. <br> <img src=\'https://i.postimg.cc/tTCZdR2z/Whats-App-Image-2024-06-27-at-20-47-46-4b390adc.jpg\' border=\'0\' alt=\'Whats-App-Image-2024-06-27-at-20-47-46-4b390adc\'/>',
                 'Para obtener ese id, te dirigis a TU google dirve.',
                 'Te posicionas en el root donde quieras generar todo el path de carpetas.',
                 'Una vez posicionado dentro de la carpeta, En la URI podes selecionar el ID.<br> <img src=\'https://i.postimg.cc/JzMk7QZg/Captura-de-pantalla-1264.png\' border=\'0\' alt=\'Captura-de-pantalla-1264\'/>',
@@ -219,7 +216,7 @@ echo $OUTPUT->header();
                 [
                     'q' => '¿Está el plugin disponible en la tienda de Moodle?',
                     'a' => 'Actualmente, el plugin no está disponible en la tienda de Moodle.
-                    Solo se puede descargar desde el repositorio de GitHub mencionado anteriormente.'
+                    Solo se puede descargar desde el drive mencionado anteriormente.'
                 ],
                 [
                     'q' => 'Cuando configuro Google Drive o el directorio local,
@@ -228,9 +225,8 @@ echo $OUTPUT->header();
                     Esto incluye la frecuencia de exportación, así como la configuración de Google Drive y
                      el directorio local.'
                 ],
-                ['q' => '¿Cómo puedo desinstalar el Plugin?', 'a' => 'ir a “Site Administration”, ir a la sección “Plugins”, luego a plugins overview.
-                Buscar el plugin en Activity modules y le das a la opción “Uninstall”, luego borrar la carpeta “exportgrades” en tu Moodle. <br>
-                Luego'
+                ['q' => '¿Cómo puedo desinstalar el Plugin?', 'a' => 'ir a “Site Administration”, ir a la sección “Plugins”, luego a "Plugins overview".
+                Buscar el plugin en Activity modules y le das a la opción “Uninstall”, luego borrar la carpeta “exportgrades” en tu Moodle. <br>'
                 ]
             ];
             $counter = 0;
@@ -266,7 +262,7 @@ echo $OUTPUT->header();
                     <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse show">
                         <div class="accordion-body">
                             <div class="accordion-body">Nos puede contactar o enviar su consulta a este mail: <a
-                                        href="mailto:moodlePlugin@gmail.com">moodlePlugin@gmail.com</a></div>
+                                        href="mailto:grupo1ort2024@gmail.com">grupo1ort2024@gmail.com</a></div>
                         </div>
                     </div>
                 </div>
