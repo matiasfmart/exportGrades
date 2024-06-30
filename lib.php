@@ -55,114 +55,121 @@ function obtener_notas_curso($courseid, $selected_users = null)
     global $DB;
 
     // Construcción de la consulta SQL
+    
     $sql = "
         SELECT 
-            u.id AS userid,
-            u.lastname AS 'apellidos',
-            u.firstname AS 'nombre',
-            u.username AS 'nombre de usuario',
-            '-' AS 'institucion',
-            'ASC' AS 'departamento',
-            ccat1.name AS 'sede',
-            ccat2.name AS 'carrera',
-            'class',
-            g.id AS groupid,
-            g.name AS 'grupo',
-            '10' AS 'asistencia',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Carpeta Final del Proyecto (Documentación)' AND gg.userid = u.id) AS 'carpeta Final del Proyecto (Documentación)',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Carpeta Final del Proyecto (Documentación) - Recuperatorio' AND gg.userid = u.id) AS 'carpeta Final del Proyecto (Documentación) - Recuperatorio',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Carpeta del Programador' AND gg.userid = u.id) AS 'carpeta del Programador',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Carpeta del Proyecto' AND gg.userid = u.id) AS 'carpeta del Proyecto',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Conformación de los Grupos y Elección de 2 posibles Proyectos' AND gg.userid = u.id) AS 'conformación de los Grupos y Elección de 2 posibles Proyectos',
-            c.fullname AS 'Curso',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Entrega de Aplicativo (Entrega)' AND gg.userid = u.id) AS 'entrega de Aplicativo (Entrega)',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Entrega de Aplicativo (Recuperatorio)' AND gg.userid = u.id) AS 'entrega de Aplicativo (Recuperatorio)',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Nota Final 1°Llamado Diciembre' AND gg.userid = u.id) AS 'nota Final 1°Llamado Diciembre',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Nota Final 1°Llamado Febrero' AND gg.userid = u.id) AS 'nota Final 1°Llamado Febrero',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Nota Final 2°Llamado Diciembre' AND gg.userid = u.id) AS 'nota Final 2°Llamado Diciembre',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Nota Final 2°Llamado Febrero' AND gg.userid = u.id) AS 'nota Final 2°Llamado Febrero',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)' AND gg.userid = u.id) AS 'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Nota Final Llamado Julio' AND gg.userid = u.id) AS 'nota Final Llamado Julio',
-            (SELECT gg.finalgrade 
-             FROM mdl_grade_items gi 
-             JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
-             WHERE gi.itemname = 'Presentacion Proyecto Belgrano' AND gg.userid = u.id) AS 'presentacion Proyecto Belgrano'
-        FROM 
-            mdl_user u
-        LEFT JOIN 
-            mdl_user_enrolments ue ON ue.userid = u.id
-        LEFT JOIN 
-            mdl_enrol e ON e.id = ue.enrolid
-        RIGHT JOIN 
-            mdl_course c ON c.id = e.courseid
-        LEFT JOIN 
-            mdl_course_categories ccat1 ON ccat1.id = c.category
-        LEFT JOIN 
-            mdl_course_categories ccat2 ON ccat2.id = ccat1.parent
-        LEFT JOIN 
-            mdl_groups_members gm ON gm.userid = u.id
-        LEFT JOIN 
-            mdl_groups g ON g.id = gm.groupid
-        LEFT JOIN 
-             {role_assignments} ra ON ra.userid = u.id
-         LEFT JOIN {context} ctx ON ctx.id = ra.contextid AND ctx.contextlevel = 50
-        
-        WHERE 
-            u.deleted = 0 
-            and c.id = :courseid 
-            AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')";
+    u.id AS userid,
+    u.lastname AS 'apellidos',
+    u.firstname AS 'nombre',
+    u.username AS 'nombre de usuario',
+    u.institution AS 'institucion',
+    u.department AS 'departamento',
+    u.institution AS 'sede',
+    u.department AS 'carrera',
+   COALESCE(NULLIF(GROUP_CONCAT(class.data SEPARATOR ','), ''), '')  AS 'class',
+ g.id AS groupid,
+    g.name AS 'grupo',
+    '10' AS 'asistencia',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Carpeta Final del Proyecto (Documentación)' AND gg.userid = u.id) AS 'carpeta Final del Proyecto (Documentación)',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Carpeta Final del Proyecto (Documentación) - Recuperatorio' AND gg.userid = u.id) AS 'carpeta Final del Proyecto (Documentación) - Recuperatorio',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Carpeta del Programador' AND gg.userid = u.id) AS 'carpeta del Programador',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Carpeta del Proyecto' AND gg.userid = u.id) AS 'carpeta del Proyecto',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Conformación de los Grupos y Elección de 2 posibles Proyectos' AND gg.userid = u.id) AS 'conformación de los Grupos y Elección de 2 posibles Proyectos',
+    c.fullname AS 'Curso',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Entrega de Aplicativo (Entrega)' AND gg.userid = u.id) AS 'entrega de Aplicativo (Entrega)',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Entrega de Aplicativo (Recuperatorio)' AND gg.userid = u.id) AS 'entrega de Aplicativo (Recuperatorio)',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Nota Final 1°Llamado Diciembre' AND gg.userid = u.id) AS 'nota Final 1°Llamado Diciembre',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Nota Final 1°Llamado Febrero' AND gg.userid = u.id) AS 'nota Final 1°Llamado Febrero',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Nota Final 2°Llamado Diciembre' AND gg.userid = u.id) AS 'nota Final 2°Llamado Diciembre',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Nota Final 2°Llamado Febrero' AND gg.userid = u.id) AS 'nota Final 2°Llamado Febrero',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)' AND gg.userid = u.id) AS 'nota Final Cursada (REQUERIDO POR LA COORDINACIÓN)',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Nota Final Llamado Julio' AND gg.userid = u.id) AS 'nota Final Llamado Julio',
+    (SELECT gg.finalgrade 
+     FROM mdl_grade_items gi 
+     JOIN mdl_grade_grades gg ON gi.id = gg.itemid 
+     WHERE gi.itemname = 'Presentacion Proyecto Belgrano' AND gg.userid = u.id) AS 'presentacion Proyecto Belgrano'
+FROM 
+    mdl_user u
+LEFT JOIN 
+    mdl_user_enrolments ue ON ue.userid = u.id
+LEFT JOIN 
+    mdl_enrol e ON e.id = ue.enrolid
+LEFT JOIN 
+    mdl_course c ON c.id = e.courseid
+LEFT JOIN 
+    mdl_groups_members gm ON gm.userid = u.id
+LEFT JOIN 
+    mdl_groups g ON g.id = gm.groupid
+LEFT JOIN 
+    mdl_user_info_data class ON class.userid = u.id
+LEFT JOIN 
+    mdl_user_info_field class_field ON class.fieldid = class_field.id AND class_field.shortname = 'class'
+LEFT JOIN 
+    {role_assignments} ra ON ra.userid = u.id
+LEFT JOIN 
+    {context} ctx ON ctx.id = ra.contextid AND ctx.contextlevel = 50
+WHERE 
+    u.deleted = 0 
+    AND c.id = :courseid 
+    AND ra.roleid = (SELECT id FROM {role} WHERE shortname = 'student')";
 
     // Si se pasaron usuarios seleccionados, añadir filtro por esos usuarios
+  
     if (!empty($selected_users)) {
         $user_ids = implode(',', array_map('intval', $selected_users));
         $sql .= " AND u.id IN ($user_ids)";
     }
-
-    $sql .= " 
+     $sql .= " 
         GROUP BY u.id, c.id
         ORDER BY u.id
     ";
+   
 
     return $DB->get_recordset_sql($sql, ['courseid' => $courseid]);
+
+
+
+
+
 }
 
 
@@ -177,9 +184,16 @@ function export_selected_grades_to_csv($courseid, $selected_users = null)
         return false;
     }
 
+    
+
+    // Obtener el curso
+    $course = $DB->get_record('course', array('id' => $courseid), '*', MUST_EXIST);
+
+
     $date = new DateTime();
     $datetime = $date->format('Ymd_His');
-    $filename = "grades_course_{$courseid}_{$datetime}.csv";
+   
+    $filename = "{$course->shortname}_{$course->fullname}_{$datetime}.csv";
 
     $temp_file = tempnam(sys_get_temp_dir(), 'export_grades_');
     $handle = fopen($temp_file, 'w');
@@ -312,6 +326,8 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
         throw new \Exception("El archivo no existe o no se puede leer: $filePath");
     }
 
+
+   
     // Path to the token file
 
     $tokenPath = 'config/token.json';
@@ -344,7 +360,10 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
 
     // Verifica que el objeto $course contiene el campo fullname
     if (isset($course->fullname)) {
+        echo json_encode($course);
+        echo print_r($course, true);
         printf("Nombre del curso: %s\n", $course->fullname);
+
     } else {
         throw new \Exception("El objeto \$course no contiene el campo fullname: $course");
     }
@@ -551,25 +570,11 @@ $content = file_get_contents($filePath);
         printf("Nueva carpeta del año actual creada con ID: %s\n", $yearFolderId);
     }
 
-    // Buscar y eliminar archivos existentes del curso en la carpeta del año actual
-    /*
-    $response = $service->files->listFiles(
-        array(
-            'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false and name contains '$course->fullname'",
-            'spaces' => 'drive',
-            'fields' => 'files(id, name, parents)',
-        )
-    );
+    
 
-    foreach ($response->files as $file) {
-        $fileId = $file->id;
-        $service->files->delete($fileId);
-        printf("Archivo del curso eliminado en la carpeta del año actual: %s\n", $file->name);
-    }*/
-    $courseId = $course->id; // ID del curso actual
 
 // Patron para buscar archivos del curso actual
-$pattern = "grades_course_$courseId";
+$pattern = "{$course->shortname}_{$course->fullname}";
 
 // Llamar a la API de Google Drive para listar archivos
 $response = $service->files->listFiles(array(
@@ -582,13 +587,13 @@ $response = $service->files->listFiles(array(
 foreach ($response->files as $file) {
     // Obtener el ID y el nombre del archivo
     $fileId = $file->id;
-    $fileName = $file->name;
+    $fileNameDelete = $file->name;
 
     // Verificar si el nombre del archivo contiene el patrón del curso actual
-    if (strpos($fileName, $pattern) !== false) {
+    if (strpos($fileNameDelete, $pattern) !== false) {
         // Eliminar el archivo
         $service->files->delete($fileId);
-        printf("Archivo del curso eliminado en la carpeta del año actual: %s\n", $fileName);
+        printf("Archivo del curso eliminado en la carpeta del año actual: %s\n", $fileNameDelete);
     }
 }
 
@@ -631,21 +636,7 @@ function get_all_groups_menu()
 
     return $group_options;
 }
-/*
-function get_all_users_menu($courseid) {
-    global $DB;
 
-    // Obtener todos los usuarios matriculados en el curso
-    $users = $DB->get_records_menu('user', array('deleted' => 0), '', 'id, CONCAT(firstname, " ", lastname) AS fullname');
-
-    // Formatear los usuarios para el menú desplegable (id => nombre completo)
-    $user_options = [];
-    foreach ($users as $userid => $fullname) {
-        $user_options[$userid] = format_string($fullname);
-    }
-
-    return $user_options;
-}*/
 
 function get_users_by_group($courseid, $groupid)
 {
