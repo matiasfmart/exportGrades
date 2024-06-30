@@ -107,7 +107,7 @@ $filename = $file_info['filename'];
 // Renombrar el archivo
 $date = new DateTime();
 $datetime = $date->format('Ymd_His');
-$newFileName = "grades_course_{$course->id}_{$datetime}.csv";
+$newFileName = "{$course->shortname}_{$course->fullname}_{$datetime}.csv";
 $newFilePath = dirname($filepath) . "/" . $newFileName;
 
 if (!rename($filepath, $newFilePath)) {
