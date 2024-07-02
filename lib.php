@@ -1,5 +1,6 @@
 <?php
 require_once (__DIR__ . '/vendor/autoload.php');
+require_once($CFG->libdir.'/filelib.php');
 defined('MOODLE_INTERNAL') || die();
 define('CLIENT_SECRET_PATH', __DIR__ . '/config/client_secret.json');
 
@@ -301,170 +302,94 @@ function getCourseHierarchyForDrive($courseid)
 
 
 //subida al drive
-
-function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_credentials, $drive_folder_id, $course)
-{
+function configureGoogleClient($client_secret_path, $tokenPath) {
     $client = new Google_Client();
-    // Utilizar la constante definida para la ruta del client_secret.json
-    $client_secret_path = CLIENT_SECRET_PATH;
-    // Verificar si el archivo client_secret.json existe
+    
     if (file_exists($client_secret_path)) {
-        // Configurar el cliente con el archivo client_secret.json
         $client->setAuthConfig($client_secret_path);
-
     } else {
         throw new \Exception("Error: archivo client_secret.json no encontrado en $client_secret_path");
     }
-    printf("filePath %s\n", $filePath);
-    printf("fileName %s\n", $fileName);
-
+    
     $client->addScope(Google_Service_Drive::DRIVE_FILE);
     $client->setAccessType('offline');
     $client->setPrompt('select_account consent');
-
-    if (!file_exists($filePath) || !is_readable($filePath)) {
-        throw new \Exception("El archivo no existe o no se puede leer: $filePath");
-    }
-
-
-   
-    // Path to the token file
-
-    $tokenPath = 'config/token.json';
-
+    
     if (file_exists($tokenPath)) {
         $accessToken = json_decode(file_get_contents($tokenPath), true);
         if (json_last_error() === JSON_ERROR_NONE && isset($accessToken['access_token']) && isset($accessToken['refresh_token'])) {
             $client->setAccessToken($accessToken);
         } else {
-            // El token es inválido o no contiene los campos necesarios
             $accessToken = null;
         }
     } else {
-        // El archivo token.json no existe
         $accessToken = null;
     }
-
+    
     if (!$accessToken) {
         printf("Token inválido o no encontrado. Por favor, visita la siguiente URL y autoriza el acceso:\n%s\n", $client->createAuthUrl());
         $authCode = trim(fgets(STDIN));
         $accessToken = $client->fetchAccessTokenWithAuthCode($authCode);
         $client->setAccessToken($accessToken);
 
-        // Guarda el token en el archivo
         if (!file_exists(dirname($tokenPath))) {
             mkdir(dirname($tokenPath), 0700, true);
         }
         file_put_contents($tokenPath, json_encode($client->getAccessToken()));
     }
+    
+    if ($client->isAccessTokenExpired()) {
+        refreshToken($client, $tokenPath);
+    }
 
-    // Verifica que el objeto $course contiene el campo fullname
+    return $client;
+}
+
+function refreshToken($client, $tokenPath) {
+    try {
+        if ($client->getRefreshToken()) {
+            $newAccessToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
+            $client->setAccessToken($newAccessToken);
+        } else {
+            throw new \Exception("No se encontró el token de actualización (refresh token).");
+        }
+
+        if (!file_exists(dirname($tokenPath))) {
+            mkdir(dirname($tokenPath), 0700, true);
+        }
+        file_put_contents($tokenPath, json_encode($client->getAccessToken()));
+    } catch (Exception $e) {
+        throw new \Exception("Error al refrescar el token de acceso: " . $e->getMessage());
+    }
+}
+
+function verifyCourse($course) {
     if (isset($course->fullname)) {
-        echo json_encode($course);
-        echo print_r($course, true);
         printf("Nombre del curso: %s\n", $course->fullname);
-
     } else {
         throw new \Exception("El objeto \$course no contiene el campo fullname: $course");
     }
+}
 
-    // Obtener el id del curso y la jerarquia de carpetas
-    $courseid = $course->id;
-    printf("Id del curso: %s\n", $courseid);
-    $courseHierarchy = getCourseHierarchyForDrive($course->id);
-    if (isset($course->id)) {
-        printf("Jerarquia del curso: %s\n", $courseHierarchy);
-    } else {
-        throw new \Exception("El objeto \$courseHierarchy no tiene contenido");
-    }
-
-    // Refresh the token if it's expired
-    if ($client->isAccessTokenExpired()) {
-        try {
-            if ($client->getRefreshToken()) {
-                $newAccessToken = $client->fetchAccessTokenWithRefreshToken($client->getRefreshToken());
-                $client->setAccessToken($newAccessToken);
-            } else {
-                throw new \Exception("No se encontró el token de actualización (refresh token).");
-            }
-
-            if (!file_exists(dirname($tokenPath))) {
-                mkdir(dirname($tokenPath), 0700, true);
-            }
-            file_put_contents($tokenPath, json_encode($client->getAccessToken()));
-        } catch (Exception $e) {
-            throw new \Exception("Error al refrescar el token de acceso: " . $e->getMessage());
-        }
-    }
-
-    // Verifica nuevamente el formato del token
-    $tokenData = json_decode(file_get_contents($tokenPath), true);
-    if (json_last_error() !== JSON_ERROR_NONE || !isset($tokenData['access_token'])) {
-        throw new Exception('Formato de token inválido');
-    }
-
-    $service = new Google_Service_Drive($client);
-    $currentFolderId = $drive_folder_id;
-
-    // Separar la jerarquía por el separador '>'
-    $folders = explode(' > ', $courseHierarchy);
-
-    foreach ($folders as $folderName) {
-        // Buscar si la carpeta ya existe
-        $response = $service->files->listFiles(
-            array(
-                'q' => "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and '$currentFolderId' in parents and trashed = false",
-                'spaces' => 'drive',
-                'fields' => 'files(id, name)',
-            )
-        );
-
-        if (count($response->files) > 0) {
-            // La carpeta ya existe, obtener su ID
-            $currentFolderId = $response->files[0]->id;
-            printf("La carpeta ya existe con ID: %s\n", $currentFolderId);
-        } else {
-            // Crear la carpeta si no existe
-            $folderMetadata = new Google_Service_Drive_DriveFile(
-                array(
-                    'name' => $folderName,
-                    'mimeType' => 'application/vnd.google-apps.folder',
-                    'parents' => array($currentFolderId)
-                )
-            );
-
-            $folder = $service->files->create(
-                $folderMetadata,
-                array(
-                    'fields' => 'id'
-                )
-            );
-
-            $currentFolderId = $folder->id;
-            printf("Nueva carpeta creada con ID: %s\n", $currentFolderId);
-        }
-    }
-
-    // Crear la carpeta "Historico" dentro de la última carpeta del curso si no existe
-    $historicFolderName = "Historico";
+function getOrCreateFolder($service, $folderName, $parentFolderId) {
+    printf("Buscando o creando carpeta: %s\n", $folderName);
     $response = $service->files->listFiles(
         array(
-            'q' => "name = '$historicFolderName' and mimeType = 'application/vnd.google-apps.folder' and '$currentFolderId' in parents and trashed = false",
+            'q' => "name = '$folderName' and mimeType = 'application/vnd.google-apps.folder' and '$parentFolderId' in parents and trashed = false",
             'spaces' => 'drive',
             'fields' => 'files(id, name)',
         )
     );
 
-    $historicFolderId = null;
     if (count($response->files) > 0) {
-        $historicFolderId = $response->files[0]->id;
-        printf("La carpeta 'Historico' ya existe con ID: %s\n", $historicFolderId);
+        printf("Carpeta encontrada: %s (ID: %s)\n", $folderName, $response->files[0]->id);
+        return $response->files[0]->id;
     } else {
         $folderMetadata = new Google_Service_Drive_DriveFile(
             array(
-                'name' => $historicFolderName,
+                'name' => $folderName,
                 'mimeType' => 'application/vnd.google-apps.folder',
-                'parents' => array($currentFolderId)
+                'parents' => array($parentFolderId)
             )
         );
 
@@ -475,11 +400,25 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
             )
         );
 
-        $historicFolderId = $folder->id;
-        printf("Nueva carpeta 'Historico' creada con ID: %s\n", $historicFolderId);
+        printf("Carpeta creada: %s (ID: %s)\n", $folderName, $folder->id);
+        return $folder->id;
+    }
+}
+
+function getCourseHierarchyFolders($service, $courseHierarchy, $drive_folder_id) {
+    $currentFolderId = $drive_folder_id;
+    $folders = explode(' > ', $courseHierarchy);
+
+    foreach ($folders as $folderName) {
+        $currentFolderId = getOrCreateFolder($service, $folderName, $currentFolderId);
     }
 
-    // Mover todos los archivos existentes a la carpeta "Historico"
+    return $currentFolderId;
+}
+
+function moveFilesToHistoric($service, $currentFolderId) {
+    $historicFolderId = getOrCreateFolder($service, "Historico", $currentFolderId);
+
     $response = $service->files->listFiles(
         array(
             'q' => "'$currentFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false",
@@ -502,15 +441,21 @@ function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_creden
         printf("Archivo movido a 'Historico': %s\n", $file->name);
     }
 
+    return $historicFolderId;
+}
 
-$fileMetadata = new Google_Service_Drive_DriveFile(
-    array(
-        'name' => $fileName,
-        'parents' => array($currentFolderId)
-    )
-);
+function uploadFile($service, $filePath, $fileName, $parentFolderId) {
+    $fileMetadata = new Google_Service_Drive_DriveFile(
+        array(
+            'name' => $fileName,
+            'parents' => array($parentFolderId)
+        )
+    );
 
-$content = file_get_contents($filePath);
+    $content = file_get_contents($filePath);
+    if ($content === false) {
+        throw new \Exception("No se pudo leer el contenido del archivo: $filePath");
+    }
 
     $file = $service->files->create(
         $fileMetadata,
@@ -522,14 +467,25 @@ $content = file_get_contents($filePath);
         )
     );
 
-    printf("File ID: %s\n", $file->id);
+    printf("Archivo subido: %s (ID: %s)\n", $fileName, $file->id);
+}
 
-    // --- Añadir el archivo a la carpeta del año actual ---
+function deleteExistingCourseFiles($service, $yearFolderId, $pattern) {
+    printf("Buscando archivos para eliminar con patrón: %s\n", $pattern);
+    $response = $service->files->listFiles(array(
+        'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and name contains '$pattern' and trashed = false",
+        'spaces' => 'drive',
+        'fields' => 'files(id, name, parents)',
+    ));
 
-    // Obtener el año actual
+    foreach ($response->files as $file) {
+        $service->files->delete($file->id);
+        printf("Archivo eliminado: %s (ID: %s)\n", $file->name, $file->id);
+    }
+}
+
+function getOrCreateCurrentYearFolder($service, $drive_folder_id) {
     $currentYear = date("Y");
-
-    // Buscar la carpeta del año actual
     $yearFolderId = null;
 
     $response = $service->files->listFiles(
@@ -541,7 +497,6 @@ $content = file_get_contents($filePath);
     );
 
     if (count($response->files) > 0) {
-        // La carpeta del año actual ya existe
         foreach ($response->files as $folder) {
             if (strpos($folder->name, (string) $currentYear) !== false) {
                 $yearFolderId = $folder->id;
@@ -550,12 +505,11 @@ $content = file_get_contents($filePath);
         }
         printf("Carpeta del año actual encontrada con ID: %s\n", $yearFolderId);
     } else {
-        // Crear la carpeta del año actual si no existe
         $folderMetadata = new Google_Service_Drive_DriveFile(
             array(
-                'name' => $currentYear, // Nombre ejemplo para nueva carpeta
+                'name' => $currentYear,
                 'mimeType' => 'application/vnd.google-apps.folder',
-                'parents' => array($drive_folder_id) // Especificar que la carpeta del año actual sea un subdirectorio de la carpeta raíz
+                'parents' => array($drive_folder_id)
             )
         );
 
@@ -570,54 +524,45 @@ $content = file_get_contents($filePath);
         printf("Nueva carpeta del año actual creada con ID: %s\n", $yearFolderId);
     }
 
+    return $yearFolderId;
+}
+
+
+
+
+function uploadToGoogleDrive($filePath, $fileName, $drive_service_account_credentials, $drive_folder_id, $course) {
+    printf("drive_service_account_credentials %s\n", $drive_service_account_credentials);
+    $client_secret_path = CLIENT_SECRET_PATH;
+    $tokenPath = 'config/token.json';
+
+    $client = configureGoogleClient($client_secret_path, $tokenPath);
     
-
-
-// Patron para buscar archivos del curso actual
-$pattern = "{$course->shortname}_{$course->fullname}";
-
-// Llamar a la API de Google Drive para listar archivos
-$response = $service->files->listFiles(array(
-    'q' => "'$yearFolderId' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false and name contains '$pattern'",
-    'spaces' => 'drive',
-    'fields' => 'files(id, name, parents)',
-));
-
-// Iterar sobre los archivos encontrados y eliminar solo los del curso actual
-foreach ($response->files as $file) {
-    // Obtener el ID y el nombre del archivo
-    $fileId = $file->id;
-    $fileNameDelete = $file->name;
-
-    // Verificar si el nombre del archivo contiene el patrón del curso actual
-    if (strpos($fileNameDelete, $pattern) !== false) {
-        // Eliminar el archivo
-        $service->files->delete($fileId);
-        printf("Archivo del curso eliminado en la carpeta del año actual: %s\n", $fileNameDelete);
+    if (!file_exists($filePath) || !is_readable($filePath)) {
+        throw new \Exception("El archivo no existe o no se puede leer: $filePath");
     }
+    
+    verifyCourse($course);
+
+    $service = new Google_Service_Drive($client);
+    $courseHierarchy = getCourseHierarchyForDrive($course->id);
+    printf("Jerarquía del curso: %s\n", $courseHierarchy);
+
+    $currentFolderId = getCourseHierarchyFolders($service, $courseHierarchy, $drive_folder_id);
+    printf("ID de la carpeta actual: %s\n", $currentFolderId);
+
+    moveFilesToHistoric($service, $currentFolderId);
+
+    $yearFolderId = getOrCreateCurrentYearFolder($service, $drive_folder_id);
+    printf("ID de la carpeta del año actual: %s\n", $yearFolderId);
+
+    $pattern = "{$course->shortname}_{$course->fullname}";
+    deleteExistingCourseFiles($service, $yearFolderId, $pattern);
+
+    uploadFile($service, $filePath, $fileName, $yearFolderId);//subida a la carpeta anual de la carrera
+    uploadFile($service, $filePath, $fileName, $currentFolderId); // subida a la carpeta del curso
 }
 
 
-    // Subir el nuevo archivo a la carpeta del año actual
-    $fileMetadata = new Google_Service_Drive_DriveFile(
-        array(
-            'name' => $fileName,
-            'parents' => array($yearFolderId)
-        )
-    );
-
-    $file = $service->files->create(
-        $fileMetadata,
-        array(
-            'data' => $content,
-            'mimeType' => 'text/csv',
-            'uploadType' => 'multipart',
-            'fields' => 'id'
-        )
-    );
-
-    printf("Nuevo archivo subido a la carpeta del año actual. File ID: %s\n", $file->id);
-}
 
 //GRUPOSSS
 
@@ -682,3 +627,10 @@ function mod_exportgrades_extend_navigation(global_navigation $root)
     $node->showinflatnavigation = true;
     $root->add_node($node);
 }
+
+
+
+
+
+
+
