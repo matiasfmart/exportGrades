@@ -100,6 +100,21 @@ if ($hassiteconfig) {
             'drivecredentials'  // Área de archivo en la que se almacenará el archivo
         ));
 
+          // Campo para cargar las credenciales del servicio de Google Drive
+        $settings->add(new admin_setting_configstoredfile(
+            'mod_exportgrades/drive_service_account_credentials',
+            get_string('drivecredentials', 'mod_exportgrades'),
+            get_string('drivecredentials_desc', 'mod_exportgrades'),
+            'drivecredentials'  // Área de archivo en la que se almacenará el archivo
+        ));
+
+          // Campo para cargar las credenciales del servicio de Google Drive
+        $settings->add(new admin_setting_configstoredfile(
+            'mod_exportgrades/token',
+            get_string('token', 'mod_exportgrades'),
+            get_string('token_desc', 'mod_exportgrades'),
+            'token'  // Área de archivo en la que se almacenará el archivo
+        ));
 
         // Agregar la configuración de página a la administración de Moodle
         $ADMIN->add('modsettings', $settings);
